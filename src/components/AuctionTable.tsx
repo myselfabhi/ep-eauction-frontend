@@ -25,7 +25,7 @@ export default function AuctionTable({
   const [openAction, setOpenAction] = useState<number | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
-  const actionMenuRef = useRef<HTMLDivElement>(null);
+  // const actionMenuRef = useRef<HTMLDivElement>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   const auctions: Auction[] = [
