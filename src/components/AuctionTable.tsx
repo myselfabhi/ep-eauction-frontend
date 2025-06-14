@@ -87,18 +87,11 @@ export default function AuctionTable({
     }
   }, [selectedRows, tab, searchQuery, filtered.length]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        actionMenuRef.current &&
-        !actionMenuRef.current.contains(event.target as Node)
-      ) {
-        setOpenAction(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [filtered.length, selectedRows, tab, searchQuery]);
+useEffect(() => {
+  const handleMouseDown = () => setOpenAction(null);
+  document.addEventListener('mousedown', handleMouseDown);
+  return () => document.removeEventListener('mousedown', handleMouseDown);
+}, []);
 
   return (
     <div className="bg-white border rounded border-border overflow-x-auto">
@@ -196,7 +189,8 @@ export default function AuctionTable({
               </td>
               <td className="px-4 py-2">{auction.suppliers}</td>
               <td className="px-4 py-2">{auction.lots}</td>
-              <td className="px-4 py-2 text-right relative flex justify-end items-center gap-2">
+              <td className="px-4 py-2 text-right">
+               <div className="relative flex justify-end items-center gap-2">
                 {auction.status === 'Live' && (
                   <button
                     onClick={() => onMonitorClick('1')}
@@ -231,33 +225,41 @@ export default function AuctionTable({
                   •••
                 </button>
                 {openAction === index && (
-                  <div
-                    ref={actionMenuRef}
-                    className="absolute right-0 mt-2 w-40 bg-white border border-border rounded shadow-card text-sm z-10"
-                  >
-                    <button
-                      onClick={() => router.push('/dummy/edit-time')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
-                    >
-                      <Image src="/icons/edit_time.svg" alt="Edit Time" width={16} height={16} />
-                      Edit time
-                    </button>
-                    <button
-                      onClick={() => router.push('/dummy/edit-details')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
-                    >
-                      <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
-                      Edit Details
-                    </button>
-                    <button
-                      onClick={() => router.push('/dummy/download-report')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
-                    >
-                      <Image src="/icons/download_file.svg" alt="Download Report" width={16} height={16} />
-                      Download Report
-                    </button>
-                  </div>
+                 <div
+  onClick={(e) => e.stopPropagation()}
+  className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
+>
+  <button
+    onClick={() => router.push('/dummy/edit-time')}
+    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+  >
+    <span>Edit time</span>
+    <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
+  </button>
+
+  <div className="border-t border-border" />
+
+  <button
+    onClick={() => router.push('/dummy/edit-details')}
+    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+  >
+    <span>Edit Details</span>
+    <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
+  </button>
+
+  <div className="border-t border-border" />
+
+  <button
+    onClick={() => router.push('/dummy/download-report')}
+    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+  >
+    <span>Download Report</span>
+    <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+  </button>
+</div>
+
                 )}
+                </div>
               </td>
             </tr>
           ))}
