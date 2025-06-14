@@ -18,31 +18,31 @@ export default function EPDashboard() {
       {/* Dashboard header + bell */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-          <p className="text-sm text-[#5E5E65]">Create, track, and review auctions</p>
+          <h1 className="text-2xl font-bold mb-1 text-body">Dashboard</h1>
+          <p className="text-sm text-muted">Create, track, and review auctions</p>
         </div>
-        <button className="w-10 h-10 bg-[#F7F7FC] rounded-full flex items-center justify-center">
+        <button className="w-10 h-10 bg-background rounded-full flex items-center justify-center">
           <Image width={5} height={5} src="/icons/bell.svg" alt="Notifications" className="w-5 h-5" />
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg border border-[#EAECF0] p-4 flex flex-col justify-between h-32">
+        <div className="bg-white rounded-lg border border-border p-4 flex flex-col justify-between h-32">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-red-500 mt-0.5" />
+              <div className="h-2 w-2 rounded-full bg-status-live" />
               <span className="text-sm font-medium">Active Auctions</span>
             </div>
             <Image width={5} height={5} src="/icons/arrow_right.svg" alt="Chevron" className="w-4 h-4" />
           </div>
           <div className="flex justify-between items-end mt-4">
             <span className="text-4xl font-semibold">3</span>
-            <span className="text-red-500 text-sm font-semibold">Live</span>
+            <span className="text-status-live text-sm font-semibold">Live</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#EAECF0] p-4 flex flex-col justify-between h-32">
+        <div className="bg-white rounded-lg border border-border p-4 flex flex-col justify-between h-32">
           <div className="flex items-center gap-1 text-sm font-medium">
             <Image width={5} height={5} src="/icons/block_code.svg" alt="Total Auctions" className="w-4 h-4" />
             Total Auctions
@@ -50,7 +50,7 @@ export default function EPDashboard() {
           <div className="text-4xl font-semibold mt-4">6</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#EAECF0] p-4 flex flex-col justify-between h-32">
+        <div className="bg-white rounded-lg border border-border p-4 flex flex-col justify-between h-32">
           <div className="flex items-center gap-1 text-sm font-medium">
             <Image width={5} height={5} src="/icons/calendar_clock.svg" alt="Schedule Auction" className="w-4 h-4" />
             Schedule Auction
@@ -58,7 +58,7 @@ export default function EPDashboard() {
           <div className="text-4xl font-semibold mt-4">2</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-[#EAECF0] p-4 flex flex-col justify-between h-32">
+        <div className="bg-white rounded-lg border border-border p-4 flex flex-col justify-between h-32">
           <div className="flex items-center gap-1 text-sm font-medium">
             <Image width={5} height={5} src="/icons/group.svg" alt="Total Suppliers" className="w-4 h-4" />
             Total Suppliers
@@ -76,10 +76,10 @@ export default function EPDashboard() {
               placeholder="Search name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-[#DDE1EB] p-2 pl-8 rounded-full text-sm w-64"
+              className="border border-borderInput p-2 pl-8 rounded-full text-sm w-64"
             />
             <svg
-              className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8E8E99]"
+              className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-icon"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -92,12 +92,14 @@ export default function EPDashboard() {
               <button
                 key={t}
                 onClick={() => setTab(t as 'All' | 'Live' | 'Scheduled' | 'Completed')}
-                className={`flex items-center gap-1 px-4  rounded-full border ${
-                  tab === t ? 'border-blue-600 text-blue-600' : 'border-[#DDE1EB] text-[#383838]'
+                className={`flex items-center gap-1 px-4 rounded-full border ${
+                  tab === t
+                    ? 'border-status-scheduled text-status-scheduled'
+                    : 'border-borderInput text-body'
                 }`}
               >
                 {t === 'Live' && (
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <div className="h-2 w-2 rounded-full bg-status-live" />
                 )}
                 {t}
               </button>
@@ -108,14 +110,14 @@ export default function EPDashboard() {
         <div className="flex gap-2">
           <button
             onClick={() => router.push('/ep/suppliers')}
-            className="flex items-center gap-2 border border-[#DDE1EB] px-4 py-2 rounded text-sm text-[#383838]"
+            className="flex items-center gap-2 border border-borderInput px-4 py-2 rounded text-sm text-body"
           >
             <Image width={5} height={5} src="/icons/invite.svg" alt="Invite" className="w-4 h-4" />
             Invite Suppliers
           </button>
           <button
             onClick={() => router.push('/ep/auction/create')}
-            className="flex items-center gap-2 bg-[#007AFF] text-white px-4 py-2 rounded text-sm font-semibold"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded text-sm font-semibold"
           >
             <Image width={5} height={5} src="/icons/plus.svg" alt="Plus" className="w-4 h-4" />
             New Auction

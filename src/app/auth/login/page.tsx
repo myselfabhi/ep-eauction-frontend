@@ -18,17 +18,18 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <main className="min-h-screen flex items-center justify-center bg-background px-4">
+
       <form
         onSubmit={handleLogin}
-        className="bg-white rounded-lg p-8 shadow w-full max-w-sm"
+        className="bg-white rounded-lg p-8 shadow-card w-full max-w-sm"
       >
-        <h2 className="text-center text-lg font-semibold mb-6 text-black">Login</h2>
+        <h2 className="text-center text-lg font-semibold mb-6 text-body">Login</h2>
 
         <input
           type="text"
           placeholder="Name"
-          className="w-full border border-black rounded px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-black text-black placeholder-black"
+          className="w-full border border-borderInput rounded px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-primary text-body placeholder-muted"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -36,7 +37,7 @@ export default function LoginPage() {
         <input
           type="email"
           placeholder="Email Address"
-          className="w-full border border-black rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-black text-black placeholder-black"
+          className="w-full border border-borderInput rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-primary text-body placeholder-muted"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -44,16 +45,16 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full bg-black text-white text-sm py-2 rounded mb-4 hover:opacity-90 transition"
+          className="w-full bg-primary text-white text-sm py-2 rounded mb-4 hover:opacity-90 transition"
         >
           Proceed
         </button>
 
-        <p className="text-center text-xs text-black mb-3">or</p>
+        <p className="text-center text-xs text-muted mb-3">or</p>
 
         <button
           type="button"
-          className="w-full border border-black text-sm py-2 rounded hover:bg-gray-50 transition text-black"
+          className="w-full border border-borderInput text-sm py-2 rounded hover:bg-background transition text-body"
         >
           Google
         </button>

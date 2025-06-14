@@ -11,12 +11,12 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <aside className="w-64 bg-white p-12 border-r border-gray-300 flex flex-col gap-8 h-screen text-[#383838]">
+    <aside className="w-64 bg-white p-12 border-r border-border flex flex-col gap-8 h-screen text-body">
       <nav className="flex flex-col gap-6 text-base font-medium">
         <Link
           href="/ep/dashboard"
-          className={`flex items-center gap-3 hover:text-blue-600 ${
-            isActive('/ep/dashboard') ? 'text-blue-600' : ''
+          className={`flex items-center gap-3 hover:text-status-scheduled ${
+            isActive('/ep/dashboard') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/auctions_dashboard.svg"  alt="Auctions" className="w-5 h-5" />
@@ -25,8 +25,8 @@ export default function Sidebar() {
 
         <Link
           href="/ep/suppliers"
-          className={`flex items-center gap-3 hover:text-blue-600 ${
-            isActive('/ep/suppliers') ? 'text-blue-600' : ''
+          className={`flex items-center gap-3 hover:text-status-scheduled ${
+            isActive('/ep/suppliers') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/group.svg"  alt="Suppliers" className="w-5 h-5" />
@@ -35,8 +35,8 @@ export default function Sidebar() {
 
         <Link
           href="/ep/settings"
-          className={`flex items-center gap-3 hover:text-blue-600 ${
-            isActive('/ep/settings') ? 'text-blue-600' : ''
+          className={`flex items-center gap-3 hover:text-status-scheduled ${
+            isActive('/ep/settings') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/profile_settings.svg"  alt="Settings" className="w-5 h-5" />

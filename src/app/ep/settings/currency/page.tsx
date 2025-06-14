@@ -32,9 +32,9 @@ export default function WeeklyCurrencyRatesPage() {
             onClick={() => router.push('/ep/settings')}
           >
             <Image width={5} height={5} src="/icons/arrow_back.svg" alt="Back" className="w-4 h-4" />
-            <h1 className="text-lg font-semibold">Weekly Currency Rates</h1>
+            <h1 className="text-lg font-semibold text-body">Weekly Currency Rates</h1>
           </div>
-          <p className="text-sm text-[#5E5E65]">
+          <p className="text-sm text-muted">
             Update exchange rates used in landed cost calculations.
           </p>
         </div>
@@ -42,11 +42,11 @@ export default function WeeklyCurrencyRatesPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => alert('Save changes')}
-            className="bg-[#007AFF] text-white text-sm font-semibold px-4 py-2 rounded"
+            className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded"
           >
             Save changes
           </button>
-          <div className="flex items-center gap-2 text-sm text-[#383838]">
+          <div className="flex items-center gap-2 text-sm text-body">
             Auto Update
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -55,7 +55,7 @@ export default function WeeklyCurrencyRatesPage() {
                 checked={autoUpdate}
                 onChange={() => setAutoUpdate(!autoUpdate)}
               />
-              <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-[#007AFF] after:content-[''] after:absolute after:left-[2px] after:top-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+              <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:left-[2px] after:top-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
             </label>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function WeeklyCurrencyRatesPage() {
               placeholder="Search Currency/code"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-[#DDE1EB] p-2 pl-10 rounded text-sm"
+              className="w-full border border-borderInput p-2 pl-10 rounded text-sm"
             />
             <Image width={5} height={5}
               src="/icons/magnifying.svg"
@@ -80,7 +80,7 @@ export default function WeeklyCurrencyRatesPage() {
           </div>
           <button
             onClick={() => alert('Add Country')}
-            className="flex items-center gap-2 bg-[#F0F6FF] text-[#007AFF] text-sm font-medium px-4 py-2 rounded"
+            className="flex items-center gap-2 bg-background-blue text-status-scheduled text-sm font-medium px-4 py-2 rounded"
           >
             <Image width={5} height={5} src="/icons/add.svg" alt="Plus" className="w-4 h-4" />
             Add Country
@@ -89,13 +89,13 @@ export default function WeeklyCurrencyRatesPage() {
       </div>
 
       {/* Table */}
-      <div className="border border-[#EAECF0] rounded overflow-hidden text-sm">
+      <div className="border border-border rounded overflow-hidden text-sm">
         <table className="w-full text-left">
-          <thead className="bg-[#F9FAFB] text-[#383838] font-medium border-b border-[#EAECF0]">
+          <thead className="bg-background-subtle text-body font-medium border-b border-border">
             <tr>
-              <th className="px-4 py-4 border-r border-[#EAECF0]">Currency</th>
-              <th className="px-4 py-4 border-r border-[#EAECF0]">Code</th>
-              <th className="px-4 py-4 border-r border-[#EAECF0]">Exchange Rate (to GBP)</th>
+              <th className="px-4 py-4 border-r border-border">Currency</th>
+              <th className="px-4 py-4 border-r border-border">Code</th>
+              <th className="px-4 py-4 border-r border-border">Exchange Rate (to GBP)</th>
               <th className="px-4 py-4">Last Updated</th>
             </tr>
           </thead>
@@ -103,11 +103,11 @@ export default function WeeklyCurrencyRatesPage() {
             {filteredCurrencies.map((row, index) => (
               <tr
                 key={index}
-                className="border-b border-[#EAECF0] hover:bg-gray-50"
+                className="border-b border-border hover:bg-background"
               >
-                <td className="px-4 py-4 border-r border-[#EAECF0]">{row.currency}</td>
-                <td className="px-4 py-4 border-r border-[#EAECF0]">{row.code}</td>
-                <td className="px-4 py-4 border-r border-[#EAECF0]">
+                <td className="px-4 py-4 border-r border-border">{row.currency}</td>
+                <td className="px-4 py-4 border-r border-border">{row.code}</td>
+                <td className="px-4 py-4 border-r border-border">
                   <div className="flex justify-between items-center pr-2">
                     <span>{row.rate}</span>
                     {/* Show edit pen for all rows */}

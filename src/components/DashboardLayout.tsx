@@ -6,7 +6,7 @@ import { ReactNode } from 'react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 text-[#383838] flex flex-col">
+    <div className="min-h-screen bg-background text-body flex flex-col">
       {/* Full width header */}
       <EPHeader />
 

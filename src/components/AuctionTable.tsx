@@ -101,11 +101,11 @@ export default function AuctionTable({
   }, [filtered.length, selectedRows, tab, searchQuery]);
 
   return (
-    <div className="bg-white border rounded border-[#EAECF0] overflow-x-auto">
-      <table className="w-full text-sm text-[#383838]">
-        <thead className="bg-gray-50 text-left border-b border-[#EAECF0]">
+    <div className="bg-white border rounded border-border overflow-x-auto">
+      <table className="w-full text-sm text-body">
+        <thead className="bg-background text-left border-b border-border">
           <tr>
-            <th className="px-4 py-2 font-medium text-[#383838]">
+            <th className="px-4 py-2 font-medium text-body">
               <input
                 type="checkbox"
                 ref={selectAllRef}
@@ -114,7 +114,7 @@ export default function AuctionTable({
               />
             </th>
             {['Title', 'Status', 'Time/date'].map((col) => (
-              <th key={col} className="px-4 py-2 font-medium text-[#383838]">
+              <th key={col} className="px-4 py-2 font-medium text-body">
                 <div className="flex items-center gap-1">
                   {col}
                   <svg
@@ -130,17 +130,17 @@ export default function AuctionTable({
                 </div>
               </th>
             ))}
-            <th className="px-4 py-2 font-medium text-[#383838]">Suppliers</th>
-            <th className="px-4 py-2 font-medium text-[#383838]">Lots</th>
-            <th className="px-4 py-2 font-medium text-[#383838] text-right">Action</th>
+            <th className="px-4 py-2 font-medium text-body">Suppliers</th>
+            <th className="px-4 py-2 font-medium text-body">Lots</th>
+            <th className="px-4 py-2 font-medium text-body text-right">Action</th>
           </tr>
         </thead>
         <tbody>
           {filtered.map((auction, index) => (
             <tr
               key={index}
-              className={`border-b border-[#EAECF0] hover:bg-gray-50 ${
-                selectedRows.includes(index) ? 'bg-blue-50' : ''
+              className={`border-b border-border hover:bg-background ${
+                selectedRows.includes(index) ? 'bg-background-blue' : ''
               }`}
             >
               <td className="px-4 py-2">
@@ -155,36 +155,36 @@ export default function AuctionTable({
               <td className="px-4 py-2 flex items-center gap-1">
                 {auction.status === 'Live' && (
                   <>
-                    <div className="h-2 w-2 bg-red-500 rounded-full" />
-                    <span className="text-red-500 text-xs font-semibold">Auction Live</span>
+                    <div className="h-2 w-2 bg-status-live rounded-full" />
+                    <span className="text-status-live text-xs font-semibold">Auction Live</span>
                   </>
                 )}
                 {auction.status === 'Scheduled' &&
                   (auction.timeline.includes('Starts') ? (
                     <>
                       <Image src="/icons/schedule_blue.svg" alt="Schedule Blue" width={16} height={16} />
-                      <span className="text-blue-600 text-xs font-semibold">Schedule</span>
+                      <span className="text-status-scheduled text-xs font-semibold">Schedule</span>
                     </>
                   ) : (
                     <>
                       <Image src="/icons/schedule_black.svg" alt="Schedule Black" width={16} height={16} />
-                      <span className="text-xs font-semibold">Schedule</span>
+                      <span className="text-xs font-semibold text-body">Schedule</span>
                     </>
                   ))}
                 {auction.status === 'Completed' && (
                   <>
                     <Image src="/icons/completed_auction.svg" alt="Completed" width={16} height={16} />
-                    <span className="text-xs font-semibold">Completed</span>
+                    <span className="text-xs font-semibold text-body">Completed</span>
                   </>
                 )}
               </td>
               <td className="px-4 py-2">
                 {auction.status === 'Live' ? (
-                  <span className="inline-block px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-full">
+                  <span className="inline-block px-2 py-1 text-xs font-medium text-status-live bg-status-live-light rounded-full">
                     {auction.timeline}
                   </span>
                 ) : auction.status === 'Scheduled' && auction.timeline.includes('Starts') ? (
-                  <span className="inline-block px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full">
+                  <span className="inline-block px-2 py-1 text-xs font-medium text-status-scheduled bg-background-blue rounded-full">
                     {auction.timeline}
                   </span>
                 ) : (
@@ -200,7 +200,7 @@ export default function AuctionTable({
                 {auction.status === 'Live' && (
                   <button
                     onClick={() => onMonitorClick('1')}
-                    className="flex items-center gap-1 px-3 py-1 border border-[#EAECF0] rounded text-sm font-medium"
+                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
                   >
                     <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
                     Monitor
@@ -208,20 +208,20 @@ export default function AuctionTable({
                 )}
                 {auction.status === 'Scheduled' && (
                   <button
-                    className="flex items-center gap-1 px-3 py-1 border border-[#EAECF0] rounded text-sm font-medium"
+                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
                   >
                     <Image src="/icons/edit_pen.svg" alt="Edit" width={16} height={16} />
                   </button>
                 )}
                 {auction.status === 'Completed' && (
                   <button
-                    className="flex items-center gap-1 px-3 py-1 border border-[#EAECF0] rounded text-sm font-medium"
+                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
                   >
                     <Image src="/icons/save_file.svg" alt="Save" width={16} height={16} />
                   </button>
                 )}
                 <button
-                  className="p-1 border rounded hover:bg-gray-100"
+                  className="p-1 border rounded hover:bg-background"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -233,25 +233,25 @@ export default function AuctionTable({
                 {openAction === index && (
                   <div
                     ref={actionMenuRef}
-                    className="absolute right-0 mt-2 w-40 bg-white border border-[#EAECF0] rounded shadow text-sm z-10"
+                    className="absolute right-0 mt-2 w-40 bg-white border border-border rounded shadow-card text-sm z-10"
                   >
                     <button
                       onClick={() => router.push('/dummy/edit-time')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left"
+                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
                     >
                       <Image src="/icons/edit_time.svg" alt="Edit Time" width={16} height={16} />
                       Edit time
                     </button>
                     <button
                       onClick={() => router.push('/dummy/edit-details')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left"
+                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
                     >
                       <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
                       Edit Details
                     </button>
                     <button
                       onClick={() => router.push('/dummy/download-report')}
-                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-left"
+                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-background text-left"
                     >
                       <Image src="/icons/download_file.svg" alt="Download Report" width={16} height={16} />
                       Download Report
