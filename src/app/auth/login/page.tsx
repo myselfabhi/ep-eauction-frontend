@@ -2,20 +2,38 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios, { AxiosError } from 'axios';
+import OtpModal from '@/components/OtpModal';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [showOtp, setShowOtp] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.includes('ep')) {
-      router.push('/ep/dashboard');
-    } else {
-      router.push('/supplier/dashboard');
-    }
+    setError(''); // Clear previous errors
+    try {
+await axios.post('http://localhost:5000/api/auth/login', { email, password });
+setShowOtp(true);
+
+} catch (err) {
+  const error = err as AxiosError<{ message?: string }>;
+  const message = error.response?.data?.message;
+  if (message && message.toLowerCase().includes('invalid')) {
+    setError('Invalid email or password.');
+  } else {
+    setError(message || 'Login failed. Please try again.');
+  }
+}
+  };
+
+  const handleOtpVerified = (token: string, role: string) => {
+    localStorage.setItem('token', token);
+    router.push(role === 'supplier' ? '/supplier/dashboard' : '/ep/dashboard');
   };
 
   return (
@@ -27,6 +45,11 @@ export default function LoginPage() {
         <h2 className="text-center text-base font-semibold mb-6">
           Login into your account
         </h2>
+
+        {/* Error message shown here */}
+        {error && (
+          <p className="text-red-600 text-sm text-center mb-4">{error}</p>
+        )}
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Email</label>
@@ -65,9 +88,27 @@ export default function LoginPage() {
           type="submit"
           className="w-full bg-[#007AFF] text-white text-sm font-medium py-2 rounded hover:opacity-90 transition"
         >
-          Next
+          Login
         </button>
+
+        {/* Register link */}
+        <div className="mt-6 text-center">
+          <span className="text-sm text-gray-600">New user?{' '}</span>
+          <button
+            type="button"
+            onClick={() => router.push('/auth/ep-register')}
+            className="text-sm text-blue-600 underline hover:no-underline hover:text-blue-800 transition"
+          >
+            Register here
+          </button>
+        </div>
       </form>
+      <OtpModal
+        email={email}
+        open={showOtp}
+        onClose={() => setShowOtp(false)}
+        onVerified={handleOtpVerified}
+      />
     </main>
   );
 }

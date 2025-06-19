@@ -1,63 +1,27 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
-type Auction = {
-  title: string;
-  status: 'Live' | 'Scheduled' | 'Completed';
-  timeline: string;
-  suppliers: string;
-  lots: string;
-};
+import { Auction } from '@/types/auction';
 
 export default function AuctionTable({
   onMonitorClick,
   tab,
   searchQuery,
+  auctions,
+  loading,
 }: {
   onMonitorClick: (id: string) => void;
   tab: 'All' | 'Live' | 'Scheduled' | 'Completed';
   searchQuery: string;
+  auctions: Auction[];
+  loading: boolean;
 }) {
   const router = useRouter();
   const [openAction, setOpenAction] = useState<number | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-
-  // const actionMenuRef = useRef<HTMLDivElement>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
-
-  const auctions: Auction[] = [
-    {
-      title: 'Food Service Paper Cups - Q2',
-      status: 'Live',
-      timeline: '12:34:00 left',
-      suppliers: '8/12 active',
-      lots: '5 lots',
-    },
-    {
-      title: 'Beverage Packaging Materials',
-      status: 'Scheduled',
-      timeline: 'Starts in 5m',
-      suppliers: '8/12 active',
-      lots: '5 lots',
-    },
-    {
-      title: 'Beverage Packaging Materials',
-      status: 'Scheduled',
-      timeline: '12:01 PM GMT June 4, 2025',
-      suppliers: '8/12 active',
-      lots: '5 lots',
-    },
-    {
-      title: 'Food Service Paper Cups - Q2',
-      status: 'Completed',
-      timeline: '12:01 PM GMT June 4, 2025',
-      suppliers: '8/12 active',
-      lots: '5 lots',
-    },
-  ];
 
   const filtered = auctions.filter(
     (a) =>
@@ -87,11 +51,15 @@ export default function AuctionTable({
     }
   }, [selectedRows, tab, searchQuery, filtered.length]);
 
-useEffect(() => {
-  const handleMouseDown = () => setOpenAction(null);
-  document.addEventListener('mousedown', handleMouseDown);
-  return () => document.removeEventListener('mousedown', handleMouseDown);
-}, []);
+  useEffect(() => {
+    const handleMouseDown = () => setOpenAction(null);
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, []);
+
+  if (loading) {
+    return <div className="p-4 text-sm ">Loading auctions...</div>;
+  }
 
   return (
     <div className="bg-white border rounded border-border overflow-x-auto">
@@ -110,13 +78,7 @@ useEffect(() => {
               <th key={col} className="px-4 py-2 font-medium text-body">
                 <div className="flex items-center gap-1">
                   {col}
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M7 10l5-5 5 5" />
                     <path d="M7 14l5 5 5-5" />
                   </svg>
@@ -131,7 +93,7 @@ useEffect(() => {
         <tbody>
           {filtered.map((auction, index) => (
             <tr
-              key={index}
+              key={auction._id}
               className={`border-b border-border hover:bg-background ${
                 selectedRows.includes(index) ? 'bg-background-blue' : ''
               }`}
@@ -146,119 +108,81 @@ useEffect(() => {
               </td>
               <td className="px-4 py-2">{auction.title}</td>
               <td className="px-4 py-2 flex items-center gap-1">
-                {auction.status === 'Live' && (
+                {auction.status === 'Active' && (
                   <>
                     <div className="h-2 w-2 bg-status-live rounded-full" />
                     <span className="text-status-live text-xs font-semibold">Auction Live</span>
                   </>
                 )}
-                {auction.status === 'Scheduled' &&
-                  (auction.timeline.includes('Starts') ? (
-                    <>
-                      <Image src="/icons/schedule_blue.svg" alt="Schedule Blue" width={16} height={16} />
-                      <span className="text-status-scheduled text-xs font-semibold">Schedule</span>
-                    </>
-                  ) : (
-                    <>
-                      <Image src="/icons/schedule_black.svg" alt="Schedule Black" width={16} height={16} />
-                      <span className="text-xs font-semibold text-body">Schedule</span>
-                    </>
-                  ))}
-                {auction.status === 'Completed' && (
+                {auction.status === 'Scheduled' && (
+                  <>
+                    <Image src="/icons/schedule_blue.svg" alt="Scheduled" width={16} height={16} />
+                    <span className="text-status-scheduled text-xs font-semibold">Scheduled</span>
+                  </>
+                )}
+                {auction.status === 'Ended' && (
                   <>
                     <Image src="/icons/completed_auction.svg" alt="Completed" width={16} height={16} />
                     <span className="text-xs font-semibold text-body">Completed</span>
                   </>
                 )}
               </td>
-              <td className="px-4 py-2">
-                {auction.status === 'Live' ? (
-                  <span className="inline-block px-2 py-1 text-xs font-medium text-status-live bg-status-live-light rounded-full">
-                    {auction.timeline}
-                  </span>
-                ) : auction.status === 'Scheduled' && auction.timeline.includes('Starts') ? (
-                  <span className="inline-block px-2 py-1 text-xs font-medium text-status-scheduled bg-background-blue rounded-full">
-                    {auction.timeline}
-                  </span>
-                ) : (
-                  <div className="flex flex-col text-xs leading-tight">
-                    <span>{auction.timeline.split(',')[0]}</span>
-                    <span>{auction.timeline.split(',')[1]?.trim()}</span>
-                  </div>
-                )}
+              <td className="px-4 py-2 text-xs">
+                {new Date(auction.startTime).toLocaleString()} – {new Date(auction.endTime).toLocaleString()}
               </td>
-              <td className="px-4 py-2">{auction.suppliers}</td>
-              <td className="px-4 py-2">{auction.lots}</td>
+              <td className="px-4 py-2">{auction.invitedSuppliers?.length ?? 0}</td>
+              <td className="px-4 py-2">{auction.lots?.length ?? 0}</td>
               <td className="px-4 py-2 text-right">
-               <div className="relative flex justify-end items-center gap-2">
-                {auction.status === 'Live' && (
+                <div className="relative flex justify-end items-center gap-2">
+                  {auction.status === 'Active' && (
+                    <button
+                      onClick={() => onMonitorClick(auction._id)}
+                      className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
+                    >
+                      <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
+                      Monitor
+                    </button>
+                  )}
                   <button
-                    onClick={() => onMonitorClick('1')}
-                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
+                    className="p-1 border rounded hover:bg-background"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setOpenAction(openAction === index ? null : index);
+                    }}
                   >
-                    <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
-                    Monitor
+                    •••
                   </button>
-                )}
-                {auction.status === 'Scheduled' && (
-                  <button
-                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
-                  >
-                    <Image src="/icons/edit_pen.svg" alt="Edit" width={16} height={16} />
-                  </button>
-                )}
-                {auction.status === 'Completed' && (
-                  <button
-                    className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
-                  >
-                    <Image src="/icons/save_file.svg" alt="Save" width={16} height={16} />
-                  </button>
-                )}
-                <button
-                  className="p-1 border rounded hover:bg-background"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setOpenAction(openAction === index ? null : index);
-                  }}
-                >
-                  •••
-                </button>
-                {openAction === index && (
-                 <div
-  onClick={(e) => e.stopPropagation()}
-  className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
->
-  <button
-    onClick={() => router.push('/dummy/edit-time')}
-    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-  >
-    <span>Edit time</span>
-    <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
-  </button>
-
-  <div className="border-t border-border" />
-
-  <button
-    onClick={() => router.push('/dummy/edit-details')}
-    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-  >
-    <span>Edit Details</span>
-    <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
-  </button>
-
-  <div className="border-t border-border" />
-
-  <button
-    onClick={() => router.push('/dummy/download-report')}
-    className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-  >
-    <span>Download Report</span>
-    <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
-  </button>
-</div>
-
-                )}
+                  {openAction === index && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
+                    >
+                      <button
+                        onClick={() => router.push('/dummy/edit-time')}
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                      >
+                        <span>Edit time</span>
+                        <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
+                      </button>
+                      <div className="border-t border-border" />
+                      <button
+                        onClick={() => router.push('/dummy/edit-details')}
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                      >
+                        <span>Edit Details</span>
+                        <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
+                      </button>
+                      <div className="border-t border-border" />
+                      <button
+                        onClick={() => router.push('/dummy/download-report')}
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                      >
+                        <span>Download Report</span>
+                        <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </td>
             </tr>

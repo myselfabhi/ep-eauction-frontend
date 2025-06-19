@@ -10,7 +10,7 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <h1 className="text-2xl font-bold mb-1 text-body">Settings</h1>
-      <p className="text-sm text-muted mb-6">
+      <p className="text-sm  mb-6">
         Manage your account preferences and platform configuration
       </p>
 
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       {/* Import Duty Matrix Card */}
       <div className="bg-white border border-border rounded-lg p-6 mb-6">
         <h2 className="text-lg font-semibold mb-1 text-body">Import Duty Matrix</h2>
-        <p className="text-sm text-muted mb-4">
+        <p className="text-sm  mb-4">
           Manage country-wise and product-wise import duties used in landed cost calculations
         </p>
         <button
@@ -67,7 +67,7 @@ export default function SettingsPage() {
       {/* Weekly currency rate Card */}
       <div className="bg-white border border-border rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-1 text-body">Weekly currency rate</h2>
-        <p className="text-sm text-muted mb-4">
+        <p className="text-sm  mb-4">
           Update exchange rates used in landed cost calculations
         </p>
         <button

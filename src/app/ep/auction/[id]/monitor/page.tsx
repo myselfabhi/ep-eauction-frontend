@@ -51,7 +51,7 @@ export default function EPMonitorAuctionPage() {
       const auctionEnd = Date.now() + timeRemaining * 1000;
       localStorage.setItem(`auctionEndTimestamp-${id}`, auctionEnd.toString());
     }
-  }, [id]);
+  }, [id, timeRemaining]);
 
   useEffect(() => {
     const socket = getSocket();

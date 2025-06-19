@@ -5,7 +5,7 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io('http://localhost:4000'); // We will simulate this later
+    socket = io('http://localhost:5000'); // We will simulate this later
   }
   return socket;
 };

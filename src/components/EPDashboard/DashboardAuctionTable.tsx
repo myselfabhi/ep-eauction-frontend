@@ -4,11 +4,18 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import AuctionTable from '@/components/AuctionTable';
+import { Auction } from '@/types/auction';
 
 const tabs = ['All', 'Live', 'Scheduled', 'Completed'] as const;
 type TabType = typeof tabs[number];
 
-export default function DashboardAuctionTable() {
+export default function DashboardAuctionTable({
+  auctions,
+  loading,
+}: {
+  auctions: Auction[];
+  loading: boolean;
+}) {
   const [tab, setTab] = useState<TabType>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
@@ -54,13 +61,6 @@ export default function DashboardAuctionTable() {
         </div>
 
         <div className="flex gap-2">
-          {/* <button
-            onClick={() => router.push('/ep/suppliers')}
-            className="flex items-center gap-2 border border-borderInput px-4 py-2 rounded text-sm text-body"
-          >
-            <Image width={5} height={5} src="/icons/invite.svg" alt="Invite" className="w-4 h-4" />
-            Invite Suppliers
-          </button> */}
           <button
             onClick={() => router.push('/ep/auction/create')}
             className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded text-sm font-semibold"
@@ -71,10 +71,11 @@ export default function DashboardAuctionTable() {
         </div>
       </div>
 
-      {/* Auction Table */}
       <AuctionTable
         tab={tab}
         searchQuery={searchQuery}
+        auctions={auctions}
+        loading={loading}
         onMonitorClick={(id: string) => router.push(`/ep/auction/${id}/monitor`)}
       />
     </>
