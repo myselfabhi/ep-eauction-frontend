@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import DashboardCardSection from '@/components/EPDashboard/DashboardCardSection';
-import DashboardAuctionTable from '@/components/EPDashboard/DashboardAuctionTable';
 import { fetchAuctions } from '@/services/auction.service';
 import { Auction } from '@/types/auction';
+import DashboardAuctionTableDummy from '@/components/EPDashboard/DashboardAuctionTable';
+
 
 export default function EPDashboard() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
@@ -29,7 +30,7 @@ export default function EPDashboard() {
   return (
     <DashboardLayout>
       <DashboardCardSection auctions={auctions} loading={loading} />
-      <DashboardAuctionTable auctions={auctions} loading={loading} />
+      <DashboardAuctionTableDummy/>
     </DashboardLayout>
   );
 }

@@ -2,34 +2,48 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios, { AxiosError } from 'axios';
 import OtpModal from '@/components/OtpModal';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [showOtp, setShowOtp] = useState(false);
+  const [email, setEmail] = useState('demo@eauction.com');
+const [password, setPassword] = useState('password123');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(''); // Clear previous errors
-    try {
-await axios.post('http://localhost:5000/api/auth/login', { email, password });
-setShowOtp(true);
+//   const handleLogin = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setError(''); // Clear previous errors
+//     try {
+// await axios.post('http://localhost:5000/api/auth/login', { email, password });
+// setShowOtp(true);
 
-} catch (err) {
-  const error = err as AxiosError<{ message?: string }>;
-  const message = error.response?.data?.message;
-  if (message && message.toLowerCase().includes('invalid')) {
-    setError('Invalid email or password.');
-  } else {
-    setError(message || 'Login failed. Please try again.');
-  }
-}
-  };
+// } catch (err) {
+//   const error = err as AxiosError<{ message?: string }>;
+//   const message = error.response?.data?.message;
+//   if (message && message.toLowerCase().includes('invalid')) {
+//     setError('Invalid email or password.');
+//   } else {
+//     setError(message || 'Login failed. Please try again.');
+//   }
+// }
+//   };
+
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+
+  // Skip real API call, directly simulate success
+  const dummyToken = 'FAKE_JWT_TOKEN';
+  const dummyRole = email.includes('supplier') ? 'supplier' : 'ep'; // Change logic if needed
+
+  localStorage.setItem('token', dummyToken);
+  router.push(dummyRole === 'supplier' ? '/supplier/dashboard' : '/ep/dashboard');
+};
+
 
   const handleOtpVerified = (token: string, role: string) => {
     localStorage.setItem('token', token);
@@ -83,6 +97,17 @@ setShowOtp(true);
             </button>
           </div>
         </div>
+
+        <button
+  type="button"
+  onClick={() => {
+    setEmail('ep@eauction.com'); // or 'supplier@eauction.com'
+    setPassword('password123');
+  }}
+  className="w-full mb-3 bg-gray-100 text-gray-800 text-sm font-medium py-2 rounded border hover:bg-gray-200 transition"
+>
+  Use Dummy Account
+</button>
 
         <button
           type="submit"
