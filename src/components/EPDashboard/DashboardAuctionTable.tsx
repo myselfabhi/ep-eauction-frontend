@@ -7,7 +7,7 @@ import AuctionTable from '@/components/AuctionTable';
 import Loader from '@/components/shared/Loader';
 import { Auction } from '@/types/auction';
 
-const tabs = ['All', 'Live', 'Paused', 'Scheduled', 'Completed'] as const;
+const tabs = ['All', 'Live', 'Scheduled', 'Completed'] as const;
 type TabType = (typeof tabs)[number];
 
 type DashboardAuctionTableProps = {
@@ -64,7 +64,6 @@ export default function DashboardAuctionTable({ auctions, loading }: DashboardAu
                 }`}
               >
                 {t === 'Live' && <div className="h-2 w-2 rounded-full bg-status-live" />}
-                {t === 'Paused' && <div className="h-2 w-2 rounded-full bg-yellow-500" />}
                 {t}
               </button>
             ))}

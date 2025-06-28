@@ -5,6 +5,27 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Auction } from '@/types/auction';
 
+function getRemainingTime(endTime: string): string {
+  const end = new Date(endTime).getTime();
+  const now = Date.now();
+  const diff = end - now;
+
+  if (diff <= 0) return '00:00:00';
+
+  const hours = String(Math.floor(diff / 1000 / 60 / 60)).padStart(2, '0');
+  const minutes = String(Math.floor((diff / 1000 / 60) % 60)).padStart(2, '0');
+  const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function getStartsInMinutes(startTime: string): number {
+  const start = new Date(startTime).getTime();
+  const now = Date.now();
+  const diff = start - now;
+  return Math.floor(diff / 1000 / 60);
+}
+
 export default function AuctionTable({
   onMonitorClick,
   tab,
@@ -13,7 +34,7 @@ export default function AuctionTable({
   loading,
 }: {
   onMonitorClick: (id: string) => void;
-  tab: 'All' | 'Live' | 'Paused' | 'Scheduled' | 'Completed';
+  tab: 'All' | 'Live' | 'Scheduled' | 'Completed';
   searchQuery: string;
   auctions: Auction[];
   loading: boolean;
@@ -23,11 +44,21 @@ export default function AuctionTable({
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
-  const filtered = auctions.filter(
-    (a) =>
-      (tab === 'All' || a.status === tab) &&
+  const tabStatusMap = {
+    All: 'ALL',
+    Live: 'Active',
+    Scheduled: 'Scheduled',
+    Completed: 'Ended',
+  } as const;
+
+  const statusFilter = tabStatusMap[tab];
+
+  const filtered = auctions.filter((a) => {
+    return (
+      (statusFilter === 'ALL' || a.status === statusFilter) &&
       a.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
-  );
+    );
+  });
 
   const toggleRow = (index: number) => {
     setSelectedRows((prev) =>
@@ -57,16 +88,14 @@ export default function AuctionTable({
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
-  if (loading) {
-    return <div className="p-4 text-sm ">Loading auctions...</div>;
-  }
+  if (loading) return <div className="p-4 text-sm">Loading auctions...</div>;
 
   return (
-    <div className="bg-white border rounded border-border overflow-x-auto">
-      <table className="w-full text-sm text-body">
-        <thead className="bg-background text-left border-b border-border">
-          <tr>
-            <th className="px-4 py-2 font-medium text-body">
+    <div className="border rounded border-border overflow-x-auto">
+      <table className="w-full text-left text-sm font-normal font-sans text-body">
+        <thead className="text-left text-sm text-body">
+          <tr className="border border-border bg-white">
+            <th className="px-4 py-3 border-r border-border">
               <input
                 type="checkbox"
                 ref={selectAllRef}
@@ -74,129 +103,159 @@ export default function AuctionTable({
                 onChange={toggleAll}
               />
             </th>
-            {['Title', 'Status', 'Time/date'].map((col) => (
-              <th key={col} className="px-4 py-2 font-medium text-body">
-                <div className="flex items-center gap-1">
-                  {col}
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M7 10l5-5 5 5" />
-                    <path d="M7 14l5 5 5-5" />
-                  </svg>
+            {['Title', 'Status', 'Time/date', 'Suppliers', 'Lots'].map((col) => (
+              <th
+                key={col}
+                className="px-4 py-3 font-medium border-r border-border text-left"
+              >
+                <div className="flex items-center justify-between">
+                  <span>{col}</span>
+                  {(col === 'Title' || col === 'Status' || col === 'Time/date') && (
+                    <svg
+                      className="w-5 h-5 text-gray-400 ml-2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M7 10l5-5 5 5" />
+                      <path d="M7 14l5 5 5-5" />
+                    </svg>
+                  )}
                 </div>
               </th>
             ))}
-            <th className="px-4 py-2 font-medium text-body">Suppliers</th>
-            <th className="px-4 py-2 font-medium text-body">Lots</th>
-            <th className="px-4 py-2 font-medium text-body text-right">Action</th>
+            <th className="px-4 py-3 font-medium text-center">Action</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map((auction, index) => (
-            <tr
-              key={auction._id}
-              className={`border-b border-border hover:bg-background ${
-                selectedRows.includes(index) ? 'bg-background-blue' : ''
-              }`}
-            >
-              <td className="px-4 py-2">
-                <input
-                  type="checkbox"
-                  checked={selectedRows.includes(index)}
-                  onChange={() => toggleRow(index)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </td>
-              <td className="px-4 py-2">{auction.title}</td>
-              <td className="px-4 py-2 flex items-center gap-1">
-                {auction.status === 'Active' && (
-                  <>
-                    <div className="h-2 w-2 bg-status-live rounded-full" />
-                    <span className="text-status-live text-xs font-semibold">Auction Live</span>
-                  </>
-                )}
-                {auction.status === 'Paused' && (
-                  <>
-                    <div className="h-2 w-2 bg-yellow-500 rounded-full" />
-                    <span className="text-yellow-600 text-xs font-semibold">Auction Paused</span>
-                  </>
-                )}
-                {auction.status === 'Scheduled' && (
-                  <>
-                    <Image src="/icons/schedule_blue.svg" alt="Scheduled" width={16} height={16} />
-                    <span className="text-status-scheduled text-xs font-semibold">Scheduled</span>
-                  </>
-                )}
-                {auction.status === 'Ended' && (
-                  <>
-                    <Image src="/icons/completed_auction.svg" alt="Completed" width={16} height={16} />
-                    <span className="text-xs font-semibold text-body">Completed</span>
-                  </>
-                )}
-              </td>
-              <td className="px-4 py-2 text-xs">
-                {new Date(auction.startTime).toLocaleString()} – {new Date(auction.endTime).toLocaleString()}
-              </td>
-              <td className="px-4 py-2">{auction.invitedSuppliers?.length ?? 0}</td>
-              <td className="px-4 py-2">{auction.lots?.length ?? 0}</td>
-              <td className="px-4 py-2 text-right">
-                <div className="relative flex justify-end items-center gap-2">
-                  {(auction.status === 'Active' || auction.status === 'Paused') && (
+          {filtered.map((auction, index) => {
+            const remainingTime = getRemainingTime(auction.endTime);
+            const startsInMinutes = getStartsInMinutes(auction.startTime);
+
+            return (
+              <tr
+                key={auction._id}
+                className={`hover:bg-background ${selectedRows.includes(index) ? 'bg-background-blue' : ''}`}
+              >
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.includes(index)}
+                    onChange={() => toggleRow(index)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </td>
+                <td className="px-4 py-3">{auction.title}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {auction.status === 'Active' && (
+                      <>
+                        <span className="h-2 w-2 bg-[#EF4444] rounded-full" />
+                        <span className="text-[#EF4444] text-xs font-semibold">Auction Live</span>
+                      </>
+                    )}
+                    {auction.status === 'Scheduled' && (
+                      <>
+                        <Image src="/icons/schedule_blue.svg" alt="Scheduled" width={16} height={16} />
+                        <span className="text-[#2563EB] text-xs font-medium">Schedule</span>
+                      </>
+                    )}
+                    {auction.status === 'Ended' && (
+                      <>
+                        <Image src="/icons/completed_auction.svg" alt="Completed" width={16} height={16} />
+                        <span className="text-xs font-medium text-[#5E5E65]">Completed</span>
+                      </>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  {auction.status === 'Active' ? (
+                    <span className="text-[#EF4444] bg-[#FEE2E2] px-2 py-[2px] rounded-full text-xs font-semibold">
+                      {remainingTime} left
+                    </span>
+                  ) : auction.status === 'Scheduled' && startsInMinutes <= 5 ? (
+                    <span className="text-[#2563EB] bg-[#DBEAFE] px-2 py-[2px] rounded-full text-xs font-medium">
+                      Starts in {startsInMinutes}m
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[#5E5E65]">
+                      {new Date(auction.startTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      GMT
+                      <br />
+                      {new Date(auction.startTime).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-sm text-[#5E5E65]">
+                  {auction.invitedSuppliers?.length ?? 0}/12 active
+                </td>
+                <td className="px-4 py-3 text-sm text-[#5E5E65]">
+                  {auction.lots?.length ?? 0} lots
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="relative flex justify-end items-center gap-2">
+                    {auction.status === 'Active' && (
+                      <button
+                        onClick={() => onMonitorClick(auction._id)}
+                        className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
+                      >
+                        <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
+                        Monitor
+                      </button>
+                    )}
                     <button
-                      onClick={() => onMonitorClick(auction._id)}
-                      className={`flex items-center gap-1 px-3 py-1 border rounded text-sm font-medium transition-colors ${
-                        auction.status === 'Paused' 
-                          ? 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                          : 'border-border hover:bg-background'
-                      }`}
+                      className="p-1 border rounded hover:bg-background"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setOpenAction(openAction === index ? null : index);
+                      }}
                     >
-                      <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
-                      {auction.status === 'Paused' ? 'Resume' : 'Monitor'}
+                      •••
                     </button>
-                  )}
-                  <button
-                    className="p-1 border rounded hover:bg-background"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setOpenAction(openAction === index ? null : index);
-                    }}
-                  >
-                    •••
-                  </button>
-                  {openAction === index && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
-                    >
-                      <button
-                        onClick={() => router.push('/dummy/edit-time')}
-                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                    {openAction === index && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
                       >
-                        <span>Edit time</span>
-                        <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
-                      </button>
-                      <div className="border-t border-border" />
-                      <button
-                        onClick={() => router.push('/dummy/edit-details')}
-                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-                      >
-                        <span>Edit Details</span>
-                        <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
-                      </button>
-                      <div className="border-t border-border" />
-                      <button
-                        onClick={() => router.push('/dummy/download-report')}
-                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-                      >
-                        <span>Download Report</span>
-                        <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
+                        <button
+                          onClick={() => router.push('/dummy/edit-time')}
+                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                        >
+                          <span>Edit time</span>
+                          <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
+                        </button>
+                        <div className="border-t border-border" />
+                        <button
+                          onClick={() => router.push('/dummy/edit-details')}
+                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                        >
+                          <span>Edit Details</span>
+                          <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
+                        </button>
+                        <div className="border-t border-border" />
+                        <button
+                          onClick={() => router.push('/dummy/download-report')}
+                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
+                        >
+                          <span>Download Report</span>
+                          <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
