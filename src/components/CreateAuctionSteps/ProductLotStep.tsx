@@ -2,7 +2,7 @@ type ProductLotData = {
   lotId?: string;
   hsCode?: string;
   productName?: string;
-  materialType?: string;
+  material?: string;
   prevCost?: string;
   dimensions?: {
     l?: string;
@@ -83,8 +83,8 @@ export default function ProductLotStep({ data, onChange, showErrors }: ProductLo
               type="text"
               placeholder="Material Type"
               className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
-              value={data.materialType || ''}
-              onChange={e => onChange({ materialType: e.target.value })}
+              value={data.material || ''}
+              onChange={e => onChange({ material: e.target.value })}
             />
           </div>
           <div className="col-span-2">

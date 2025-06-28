@@ -14,9 +14,9 @@ export default function Sidebar() {
     <aside className="w-64 bg-white p-12 border-r border-border flex flex-col gap-8 h-screen text-body">
       <nav className="flex flex-col gap-6 text-base font-medium">
         <Link
-          href="/ep/dashboard"
+          href="/ep-member/dashboard"
           className={`flex items-center gap-3 hover:text-status-scheduled ${
-            isActive('/ep/dashboard') ? 'text-status-scheduled' : ''
+            isActive('/ep-member/dashboard') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/auctions_dashboard.svg"  alt="Auctions" className="w-5 h-5" />
@@ -24,9 +24,9 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="/ep/suppliers"
+          href="/ep-member/suppliers"
           className={`flex items-center gap-3 hover:text-status-scheduled ${
-            isActive('/ep/suppliers') ? 'text-status-scheduled' : ''
+            isActive('/ep-member/suppliers') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/group.svg"  alt="Suppliers" className="w-5 h-5" />
@@ -34,9 +34,9 @@ export default function Sidebar() {
         </Link>
 
         <Link
-          href="/ep/settings"
+          href="/ep-member/settings"
           className={`flex items-center gap-3 hover:text-status-scheduled ${
-            isActive('/ep/settings') ? 'text-status-scheduled' : ''
+            isActive('/ep-member/settings') ? 'text-status-scheduled' : ''
           }`}
         >
           <Image width={5} height={5} src="/icons/profile_settings.svg"  alt="Settings" className="w-5 h-5" />

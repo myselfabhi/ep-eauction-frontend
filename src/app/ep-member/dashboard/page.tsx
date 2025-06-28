@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+import DashboardLayout from '@/components/shared/DashboardLayout';
 import DashboardCardSection from '@/components/EPDashboard/DashboardCardSection';
+import DashboardAuctionTable from '@/components/EPDashboard/DashboardAuctionTable';
+import Loader from '@/components/shared/Loader';
 import { fetchAuctions } from '@/services/auction.service';
 import { Auction } from '@/types/auction';
-import DashboardAuctionTableDummy from '@/components/EPDashboard/DashboardAuctionTable';
-
 
 export default function EPDashboard() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
@@ -29,8 +29,16 @@ export default function EPDashboard() {
 
   return (
     <DashboardLayout>
-      <DashboardCardSection auctions={auctions} loading={loading} />
-      <DashboardAuctionTableDummy/>
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center min-h-[300px]">
+          <Loader />
+        </div>
+      ) : (
+        <>
+          <DashboardCardSection auctions={auctions} loading={loading} />
+          <DashboardAuctionTable auctions={auctions} loading={loading} />
+        </>
+      )}
     </DashboardLayout>
   );
 }

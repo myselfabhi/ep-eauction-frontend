@@ -1,55 +1,21 @@
 'use client';
 
-import { useState } from "react";
-
-// --- Confirmation Modal ---
-function ConfirmLaunchModal({
-  open,
-  onClose,
-  onConfirm,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-lg p-8 min-w-[350px] max-w-[95vw] flex flex-col items-center relative">
-        <div className="text-lg font-semibold mb-2 text-center">Save &amp; Launch</div>
-        <div className="text-center text-[#555] mb-6">
-          Are you sure you want to save changes &amp; send invitations?
-        </div>
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={onClose}
-            className="w-1/2 py-2 rounded border border-[#DDE1EB] text-sm font-medium bg-[#f8fafc] hover:bg-[#f3f6fb] transition"
-          >
-            Back
-          </button>
-          <button
-            onClick={onConfirm}
-            className="w-1/2 py-2 rounded bg-[#1976D2] text-white text-sm font-medium hover:bg-[#1565c0] transition"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Review step data type ---
+// Types
 type ReviewAuctionData = {
   title?: string;
   sapCode?: string;
   type?: string;
+  productName?: string;
   lots?: {
     lotId?: string;
     hsCode?: string;
     productName?: string;
     material?: string;
-    dimensions?: string;
+    dimensions?: {
+      l?: string;
+      w?: string;
+      h?: string;
+    };
     prevCost?: string | number;
   }[];
   startTime?: string;
@@ -60,145 +26,156 @@ type ReviewAuctionData = {
   emailPreview?: string;
 };
 
-// --- Main Review & Launch Step ---
 type ReviewLaunchStepProps = {
   data: ReviewAuctionData;
   onSubmit: () => void;
 };
 
-export default function ReviewLaunchStep({ data, onSubmit }: ReviewLaunchStepProps) {
-  const [modalOpen, setModalOpen] = useState(false);
+// Card Container
+const Card = ({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) => (
+  <section className={`bg-[#FAFAFC] border border-[#E1E6F0] rounded-2xl p-5 mb-6 ${className}`}>
+    <h3 className="font-semibold mb-4 text-[15px] text-[#23272E]">{title}</h3>
+    {children}
+  </section>
+);
+
+// Format dimensions object
+const formatDimensions = (dims?: { l?: string; w?: string; h?: string }) => {
+  if (!dims) return '-';
+  const { l, w, h } = dims;
+  const filled = [l, w, h].filter(Boolean);
+  return filled.length > 0 ? `L${l || '-'} x W${w || '-'} x H${h || '-'}` : '-';
+};
+
+export default function ReviewLaunchStep({ data }: ReviewLaunchStepProps) {
+  const displayLots = data.lots && data.lots.length > 0
+    ? data.lots
+    : [{
+        lotId: '-',
+        hsCode: '-',
+        productName: data.productName || '-',
+        material: '-',
+        dimensions: { l: '-', w: '-', h: '-' },
+        prevCost: '-'
+      }];
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-2">Review &amp; Launch</h2>
+    <div className="max-w-3xl mx-auto">
+      <h2 className="text-[20px] font-semibold mb-3">Review &amp; Launch</h2>
+
       {/* --- Auction Information --- */}
-      <div className="bg-[#FAFAFC] border border-[#E1E6F0] rounded mb-5 p-4">
-        <h3 className="font-semibold mb-3 text-[15px]">Auction Information</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <Card title="Auction Information">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
           <div>
             <div className="text-xs mb-1 text-gray-500">Auction title</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">{data.title || "-"}</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">{data.title || "-"}</div>
           </div>
           <div>
             <div className="text-xs mb-1 text-gray-500">SAP Code</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">{data.sapCode || "-"}</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">{data.sapCode || "-"}</div>
           </div>
           <div>
             <div className="text-xs mb-1 text-gray-500">Auction Type</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">{data.type || "-"}</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">{data.type || "-"}</div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* --- LOT & Product Details --- */}
-      <div className="bg-[#FAFAFC] border border-[#E1E6F0] rounded mb-5 p-4">
-        <h3 className="font-semibold mb-3 text-[15px]">LOT & Product Details</h3>
+      <Card title="LOT & Product Details">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border">
+          <table className="min-w-full text-sm border rounded-xl overflow-hidden">
             <thead className="bg-[#F4F6FA] text-gray-700">
               <tr>
-                <th className="p-2 border">LOT ID</th>
-                <th className="p-2 border">HS Code</th>
-                <th className="p-2 border">Product Name</th>
-                <th className="p-2 border">Material / Dimensions</th>
-                <th className="p-2 border">Previous landed cost</th>
+                <th className="px-4 py-2 border-b font-medium">LOT ID</th>
+                <th className="px-4 py-2 border-b font-medium">HS Code</th>
+                <th className="px-4 py-2 border-b font-medium">Product Name</th>
+                <th className="px-4 py-2 border-b font-medium">Material / Dimensions</th>
+                <th className="px-4 py-2 border-b font-medium">Previous landed cost</th>
               </tr>
             </thead>
             <tbody>
-              {(data.lots && data.lots.length > 0 ? data.lots : [{ lotId: '-', hsCode: '-', productName: '-', material: '-', prevCost: '-' }]).map((lot, i) => (
-                <tr key={i}>
-                  <td className="p-2 border">{lot.lotId || '-'}</td>
-                  <td className="p-2 border">{lot.hsCode || '-'}</td>
-                  <td className="p-2 border">{lot.productName || '-'}</td>
-                  <td className="p-2 border">
+              {displayLots.map((lot, i) => (
+                <tr key={i} className="bg-white even:bg-[#FAFAFC]">
+                  <td className="px-4 py-2 border-b">{lot.lotId || '-'}</td>
+                  <td className="px-4 py-2 border-b">{lot.hsCode || '-'}</td>
+                  <td className="px-4 py-2 border-b">{lot.productName || '-'}</td>
+                  <td className="px-4 py-2 border-b">
                     {lot.material || '-'}
-                    {lot.dimensions ? `, ${lot.dimensions}` : ''}
+                    {lot.material && lot.dimensions ? ', ' : ''}
+                    {formatDimensions(lot.dimensions)}
                   </td>
-                  <td className="p-2 border">{lot.prevCost || '-'}</td>
+                  <td className="px-4 py-2 border-b">{lot.prevCost || '-'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* --- Auction Settings --- */}
-      <div className="bg-[#FAFAFC] border border-[#E1E6F0] rounded mb-5 p-4">
-        <h3 className="font-semibold mb-3 text-[15px]">Auction Settings</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <Card title="Auction Settings">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
           <div>
-            <div className="text-xs mb-1 text-gray-500">Start Date & Time</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">
-              {data.startTime || "-"}
+            <div className="text-xs mb-1 text-gray-500">Start Date &amp; Time</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
+              {data.startTime ? new Date(data.startTime).toLocaleString() : "-"}
             </div>
           </div>
           <div>
-            <div className="text-xs mb-1 text-gray-500">End Date & Time</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">
-              {data.endTime || "-"}
+            <div className="text-xs mb-1 text-gray-500">End Date &amp; Time</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
+              {data.endTime ? new Date(data.endTime).toLocaleString() : "-"}
             </div>
           </div>
           <div>
             <div className="text-xs mb-1 text-gray-500">Auto-Extension Rules</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
               {data.autoExtension ? "Enabled" : "Disabled"}
             </div>
           </div>
           <div>
             <div className="text-xs mb-1 text-gray-500">Allow pause/resume live auction</div>
-            <div className="border border-[#E1E6F0] rounded px-2 py-1 bg-white">
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
               {data.allowPause ? "Enabled" : "Disabled"}
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* --- Invited suppliers --- */}
-      <div className="bg-[#FAFAFC] border border-[#E1E6F0] rounded mb-5 p-4">
-        <h3 className="font-semibold mb-3 text-[15px]">Invited suppliers ({(data.suppliers || []).length})</h3>
+      <Card title={`Invited suppliers (${(data.suppliers || []).length})`} className="mb-4">
         <div className="flex flex-wrap gap-2 mb-2">
           {(data.suppliers || []).map((email, idx) => (
             <span
               key={idx}
-              className="flex items-center gap-1 bg-[#F3F6FB] border border-[#E1E6F0] px-3 py-1 rounded-full text-sm text-[#222] shadow-sm"
+              className="flex items-center gap-1 bg-white border border-[#E1E6F0] px-3 py-1 rounded-full text-[15px] text-[#222] shadow-sm"
             >
               <span>{email}</span>
             </span>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* --- Email Preview --- */}
-      <div className="bg-[#FAFAFC] border border-[#E1E6F0] rounded mb-5 p-4">
-        <h3 className="font-semibold mb-3 text-[15px]">Email Preview</h3>
+      <Card title="Email Preview" className="mb-2">
         <textarea
-          className="w-full border border-[#DDE1EB] px-3 py-2 rounded text-sm min-h-[80px] bg-white"
+          className="w-full border border-[#DDE1EB] px-3 py-2 rounded-xl text-[15px] min-h-[110px] bg-white"
+          style={{ fontFamily: "inherit" }}
           value={
             data.emailPreview ||
-            `Dear Supplier,\n\nYou are invited to participate in our upcoming reverse auction. This auction includes multiple LOTs covering various materials and components.\n\nPlease review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.\n\nBest regards,\nProcurement Team`
+            `Dear Supplier,
+
+You are invited to participate in our upcoming reverse auction. This auction includes multiple LOTs covering various materials and components.
+
+Please review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.
+
+Best regards,
+Procurement Team`
           }
           readOnly
         />
-      </div>
-
-      {/* --- Buttons --- */}
-      <div className="flex justify-end gap-2 mt-6">
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-          type="button"
-          onClick={() => setModalOpen(true)}
-        >
-          Launch Auction
-        </button>
-      </div>
-
-      {/* --- Confirmation Modal --- */}
-      <ConfirmLaunchModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onConfirm={onSubmit}
-      />
+      </Card>
     </div>
   );
 }

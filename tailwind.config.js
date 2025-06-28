@@ -23,6 +23,7 @@ module.exports = {
   			'background-subtle': '#F9FAFB',
   			'background-blue': '#F0F6FF',
   			'background-green': '#E9F8E5',
+			'background-red': '#FFF5F5',
   			'status-live': '#FF0000',
   			'status-live-light': '#fee2e2',
   			'status-live-text': '#FF0000',

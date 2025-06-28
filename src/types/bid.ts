@@ -1,8 +1,10 @@
+import { User } from './user';
+
 export interface Bid {
   _id: string;
   auction: string;      // or Auction
   lot?: string;         // or Lot
-  supplier: string;     // or User
+  supplier: string | User;  // Updated to handle both string and User object
   amount: number;
   currency: string;
   fobCost: number;
@@ -13,4 +15,5 @@ export interface Bid {
   status: 'Active' | 'Withdrawn';
   createdAt: string;
   updatedAt: string;
+  score?: number;       // Added for ranking response
 }

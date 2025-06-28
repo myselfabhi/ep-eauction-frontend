@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Loader from '@/components/shared/Loader';
 
 export default function OtpModal({
   email,
@@ -46,7 +47,7 @@ export default function OtpModal({
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+      const res = await fetch('https://ep-backend-j7fq.onrender.com/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
@@ -69,7 +70,7 @@ export default function OtpModal({
   const handleResendOtp = async () => {
     setError('');
     try {
-      await fetch('http://localhost:5000/api/auth/resend-otp', {
+      await fetch('https://ep-backend-j7fq.onrender.com/api/auth/resend-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -94,36 +95,42 @@ export default function OtpModal({
           ×
         </button>
         <h2 className="text-center text-lg font-semibold mb-4">Enter OTP</h2>
-        <input
-          type="text"
-          placeholder="Enter 6-digit OTP"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          maxLength={6}
-          className="w-full border border-[#DDE1EB] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-          autoFocus
-        />
-        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-        <button
-          onClick={handleVerify}
-          disabled={loading || otp.length !== 6}
-          className="w-full bg-[#007AFF] text-white text-base font-medium py-3 rounded-lg hover:opacity-90 transition mb-1 disabled:opacity-50"
-        >
-          {loading ? 'Verifying...' : 'Verify OTP'}
-        </button>
-        <div className="mt-2 text-sm text-center w-full">
-          {resendTimer > 0 ? (
-            <span className="text-gray-500">Resend OTP in {resendTimer}s</span>
-          ) : (
+        {loading ? (
+          <Loader />
+        ) : (
+          <>
+            <input
+              type="text"
+              placeholder="Enter 6-digit OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              maxLength={6}
+              className="w-full border border-[#DDE1EB] rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+              autoFocus
+            />
+            {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
             <button
-              className="text-blue-600 underline hover:no-underline hover:text-blue-800 transition"
-              onClick={handleResendOtp}
-              disabled={loading}
+              onClick={handleVerify}
+              disabled={loading || otp.length !== 6}
+              className="w-full bg-[#007AFF] text-white text-base font-medium py-3 rounded-lg hover:opacity-90 transition mb-1 disabled:opacity-50"
             >
-              Resend OTP
+              {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
-          )}
-        </div>
+            <div className="mt-2 text-sm text-center w-full">
+              {resendTimer > 0 ? (
+                <span className="text-gray-500">Resend OTP in {resendTimer}s</span>
+              ) : (
+                <button
+                  className="text-blue-600 underline hover:no-underline hover:text-blue-800 transition"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

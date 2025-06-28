@@ -24,6 +24,7 @@ export default function AuctionSettingsStep({
       <p className="text-sm text-[#5E5E65] mb-8">
         Configure timing, rules, and auction type
       </p>
+
       <div className="grid grid-cols-2 gap-4 rounded">
         <div>
           <label className="block text-sm mb-1">Auction Start Date & Time</label>
@@ -33,12 +34,13 @@ export default function AuctionSettingsStep({
               showErrors && !data.startTime ? 'border-red-500' : 'border-[#DDE1EB]'
             }`}
             value={data.startTime || ''}
-            onChange={e => onChange({ startTime: e.target.value })}
+            onChange={(e) => onChange({ startTime: e.target.value })}
           />
           {showErrors && !data.startTime && (
             <span className="text-xs text-red-500">Required</span>
           )}
         </div>
+
         <div>
           <label className="block text-sm mb-1">Auction End Date & Time</label>
           <input
@@ -47,30 +49,32 @@ export default function AuctionSettingsStep({
               showErrors && !data.endTime ? 'border-red-500' : 'border-[#DDE1EB]'
             }`}
             value={data.endTime || ''}
-            onChange={e => onChange({ endTime: e.target.value })}
+            onChange={(e) => onChange({ endTime: e.target.value })}
           />
           {showErrors && !data.endTime && (
             <span className="text-xs text-red-500">Required</span>
           )}
         </div>
+
         <div className="flex items-center gap-2">
           <input
             id="auto-extension"
             type="checkbox"
             checked={!!data.autoExtension}
-            onChange={e => onChange({ autoExtension: e.target.checked })}
+            onChange={(e) => onChange({ autoExtension: e.target.checked })}
             className="w-4 h-4"
           />
           <label htmlFor="auto-extension" className="block text-sm mb-1">
             Enable Auto Extension
           </label>
         </div>
+
         <div className="flex items-center gap-2">
           <input
             id="allow-pause"
             type="checkbox"
             checked={!!data.allowPause}
-            onChange={e => onChange({ allowPause: e.target.checked })}
+            onChange={(e) => onChange({ allowPause: e.target.checked })}
             className="w-4 h-4"
           />
           <label htmlFor="allow-pause" className="block text-sm mb-1">

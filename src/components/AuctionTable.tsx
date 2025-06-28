@@ -13,7 +13,7 @@ export default function AuctionTable({
   loading,
 }: {
   onMonitorClick: (id: string) => void;
-  tab: 'All' | 'Live' | 'Scheduled' | 'Completed';
+  tab: 'All' | 'Live' | 'Paused' | 'Scheduled' | 'Completed';
   searchQuery: string;
   auctions: Auction[];
   loading: boolean;
@@ -114,6 +114,12 @@ export default function AuctionTable({
                     <span className="text-status-live text-xs font-semibold">Auction Live</span>
                   </>
                 )}
+                {auction.status === 'Paused' && (
+                  <>
+                    <div className="h-2 w-2 bg-yellow-500 rounded-full" />
+                    <span className="text-yellow-600 text-xs font-semibold">Auction Paused</span>
+                  </>
+                )}
                 {auction.status === 'Scheduled' && (
                   <>
                     <Image src="/icons/schedule_blue.svg" alt="Scheduled" width={16} height={16} />
@@ -134,13 +140,17 @@ export default function AuctionTable({
               <td className="px-4 py-2">{auction.lots?.length ?? 0}</td>
               <td className="px-4 py-2 text-right">
                 <div className="relative flex justify-end items-center gap-2">
-                  {auction.status === 'Active' && (
+                  {(auction.status === 'Active' || auction.status === 'Paused') && (
                     <button
                       onClick={() => onMonitorClick(auction._id)}
-                      className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
+                      className={`flex items-center gap-1 px-3 py-1 border rounded text-sm font-medium transition-colors ${
+                        auction.status === 'Paused' 
+                          ? 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                          : 'border-border hover:bg-background'
+                      }`}
                     >
                       <Image src="/icons/monitor_eye.svg" alt="Monitor" width={16} height={16} />
-                      Monitor
+                      {auction.status === 'Paused' ? 'Resume' : 'Monitor'}
                     </button>
                   )}
                   <button

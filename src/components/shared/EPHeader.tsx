@@ -2,7 +2,7 @@
 
 export default function EPHeader() {
   return (
-    <header className="flex justify-between items-center px-6 py-8 bg-white border-b border-border text-body">
+    <header className="flex justify-between items-center px-14 py-8 bg-white border-b border-border text-body">
       <div className="text-xl font-bold">EP Auction</div>
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-sm font-medium">
