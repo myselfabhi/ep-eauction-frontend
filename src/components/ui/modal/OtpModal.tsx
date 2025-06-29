@@ -12,7 +12,7 @@ export default function OtpModal({
   email: string;
   open: boolean;
   onClose: () => void;
-  onVerified: (token: string, user: { id: string; name: string; role: string }) => void;
+  onVerified: (token: string, user: { id: string; name: string; role: string; email: string }) => void;
 }) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);

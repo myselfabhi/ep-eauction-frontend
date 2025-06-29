@@ -12,6 +12,7 @@ export default function SettingsPage() {
 
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     const userData = localStorage.getItem('epUser');
@@ -20,6 +21,7 @@ export default function SettingsPage() {
         const user = JSON.parse(userData);
         setName(user.name || '');
         setRole(user.role || '');
+        setEmail(user.email || '');
       } catch (err) {
         console.error('Invalid user data in localStorage:', err);
       }
@@ -51,7 +53,7 @@ export default function SettingsPage() {
             <label className="block text-sm mb-1 text-body">Email</label>
             <input
               type="text"
-              value="(Coming Soon)"
+              value={email}
               readOnly
               className="w-full border border-borderInput px-3 py-2 rounded text-sm bg-background cursor-not-allowed text-body"
             />
