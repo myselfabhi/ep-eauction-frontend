@@ -40,10 +40,13 @@ export default function LoginPage() {
     }
   };
 
-  const handleOtpVerified = (token: string, role: string) => {
-    localStorage.setItem('token', token);
-    router.push(role === 'supplier' ? '/supplier/dashboard' : '/ep-member/dashboard');
-  };
+const handleOtpVerified = (token: string, user: { id: string; name: string; role: string }) => {
+  localStorage.setItem('token', token);
+  localStorage.setItem('epUser', JSON.stringify(user));
+  const role = user.role.toLowerCase();
+  router.push(role === 'supplier' ? '/supplier/dashboard' : '/ep-member/dashboard');
+};
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#F9FAFB] px-4">
