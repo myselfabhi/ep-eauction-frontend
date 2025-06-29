@@ -74,7 +74,7 @@ export default function DashboardAuctionTable({ auctions, loading }: DashboardAu
         <div className="flex gap-2">
           <button
             onClick={() => router.push('/ep-member/auction/create')}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded text-sm font-semibold"
+            className="flex items-center gap-2 bg-[#007AFF] text-white px-4 py-2 rounded text-sm font-semibold"
           >
             <Image
               width={5}
