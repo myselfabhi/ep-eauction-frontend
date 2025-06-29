@@ -6,14 +6,19 @@ import { ReactNode } from 'react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-body flex flex-col">
-      {/* Full width header */}
+    <div className="h-screen w-screen overflow-hidden bg-background text-body">
+      {/* Fixed header */}
       <EPHeader />
 
-      {/* Sidebar + Main content */}
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 p-8 bg-white overflow-auto">
+      {/* Sidebar + Scrollable Main content */}
+      <div className="flex h-[calc(100vh-64px)]"> {/* 64px = header height */}
+        {/* Fixed Sidebar */}
+        <div className="w-64 border-r border-border h-full">
+          <Sidebar />
+        </div>
+
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-y-auto p-8 bg-white mb-8">
           {children}
         </main>
       </div>

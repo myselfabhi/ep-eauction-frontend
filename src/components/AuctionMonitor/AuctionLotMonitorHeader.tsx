@@ -1,4 +1,5 @@
-import { Clock, Pause, Play, Users } from 'lucide-react';
+// components/AuctionMonitor/AuctionLotMonitorHeader.tsx
+import { Pause, Play } from 'lucide-react';
 
 type Props = {
   auctionTitle: string;
@@ -27,7 +28,7 @@ export default function AuctionLotMonitorHeader({
   auctionTitle,
   auctionCode,
   invitedSuppliersCount,
-  status,
+//   status,
   autoExtension,
   endTime,
   onPause,
@@ -39,88 +40,98 @@ export default function AuctionLotMonitorHeader({
   onViewSuppliers,
 }: Props) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <div>
-        <div className="text-xs text-gray-400 mb-2 flex items-center gap-1">
-          <span className="font-semibold text-gray-600">Auction Code:</span>
-          <span className="font-mono bg-gray-100 rounded px-2 py-0.5">{auctionCode}</span>
-          <span className="mx-2">|</span>
-          <span
-            className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-              status === 'Live'
-                ? 'bg-red-100 text-red-600'
-                : status === 'Paused'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-gray-200 text-gray-600'
-            }`}
-          >
-            {status}
-          </span>
-          <span className="mx-2">|</span>
-          <span>
-            Closes:&nbsp;
-            <span className="font-mono">{new Date(endTime).toLocaleString()}</span>
-          </span>
-          {autoExtension && (
-            <>
-              <span className="mx-2">|</span>
-              <span className="text-blue-600 font-semibold">Auto-extension</span>
-            </>
-          )}
+    <div
+      className="w-full flex flex-col md:flex-row justify-between items-start md:items-start gap-x-20 gap-y-0"
+      style={{ minHeight: 100, maxWidth: 1200 }}
+    >
+      {/* LEFT: Auction Details */}
+      <div style={{ minWidth: 350 }}>
+        <div className="text-3xl font-semibold text-gray-800 mb-3">
+          {auctionTitle}
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{auctionTitle}</h1>
-        <div className="text-gray-500 text-sm flex items-center gap-3">
-          <Users className="inline w-4 h-4" />
-          Invited suppliers: <span className="font-semibold">{invitedSuppliersCount}</span>
-          {onViewSuppliers && (
-            <button
-              onClick={onViewSuppliers}
-              className="ml-2 text-blue-600 underline underline-offset-2 text-xs"
-              type="button"
-            >
-              View
-            </button>
-          )}
+        <div className="flex items-center text-md text-gray-600 gap-2 mb-3">
+          <span>
+            <span className="font-medium text-gray-900">Auction ID:</span> {auctionCode}
+          </span>
+          <span className="text-gray-300 font-normal select-none">|</span>
+          <button
+            type="button"
+            className="text-blue-600 underline underline-offset-2 font-medium hover:text-blue-700 px-0"
+            style={{ fontSize: '13px', padding: 0, margin: 0 }}
+            onClick={onViewDetails}
+          >
+            View details
+          </button>
+        </div>
+
+        {/* Info grid */}
+        <div className="flex flex-row gap-12 items-end mt-4">
+          <div>
+            <span className="text-gray-500 block mb-1">Invited suppliers</span>
+            <span className="font-medium text-gray-900">
+              {invitedSuppliersCount}{' '}
+              <button
+                type="button"
+                className="text-blue-600 underline underline-offset-2 ml-1 font-normal"
+                style={{ fontSize: '12px', padding: 0 }}
+                onClick={onViewSuppliers}
+              >
+                View list
+              </button>
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-500 block mb-1">Status</span>
+            <span className="text-green-600 font-medium">Live</span>
+          </div>
+          <div>
+            <span className="text-gray-500 block mb-1 flex items-center gap-1">
+              Automatic Extension
+            </span>
+            <span className="text-gray-600 font-medium">{autoExtension ? 'Enabled' : 'Disabled'}</span>
+          </div>
+          <div>
+            <span className="text-gray-500 block mb-1">Closing</span>
+            <span className="text-gray-900 font-medium">
+              {new Date(endTime).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'GMT',
+                timeZoneName: 'short',
+              })}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row items-end md:items-center gap-2">
-        <button
-          onClick={isPaused ? onResume : onPause}
-          disabled={isActionLoading}
-          className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition
-            ${
-              isPaused
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-            }
-            border border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          {isActionLoading
-            ? 'Processing...'
-            : isPaused
-            ? 'Resume Auction'
-            : 'Pause Auction'}
-        </button>
-        <div
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold border
-            ${
-              status === 'Live' && !isPaused
-                ? 'border-red-200 text-red-600 bg-red-50'
-                : status === 'Paused'
-                ? 'border-yellow-300 text-yellow-700 bg-yellow-50'
-                : 'border-gray-200 text-gray-500 bg-gray-50'
-            }
-          `}
-        >
-          <Clock className="w-4 h-4" />
-          {status === 'Live' && !isPaused
-            ? `Auction Live | ${formatTime(timeRemaining)}`
-            : isPaused
-            ? 'Paused'
-            : status === 'Ended'
-            ? 'Ended'
-            : 'Scheduled'}
+
+      {/* RIGHT: Action + Status */}
+      <div className="flex flex-col items-end mt-3 md:mt-0" style={{ minWidth: 265 }}>
+        <div className="flex gap-2 mb-10">
+          <button
+            onClick={onPause}
+            disabled={isPaused || isActionLoading}
+            className={`inline-flex items-center gap-1 px-4 py-1.5 border rounded-full text-sm font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-60`}
+          >
+            <Pause className="w-4 h-4 mr-1" /> Pause auction
+          </button>
+          <button
+            onClick={onResume}
+            disabled={!isPaused || isActionLoading}
+            className={`inline-flex items-center gap-1 px-4 py-1.5 border rounded-full text-sm font-medium bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-60`}
+          >
+            <Play className="w-4 h-4 mr-1" /> Resume Auction
+          </button>
+        </div>
+        <div className="flex items-center gap-2 rounded-full bg-red-50 px-4 py-1.5 border border-red-100 text-red-600 font-semibold text-sm shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-red-400 mr-1 animate-pulse"></span>
+          Auction Live
+          <span className="ml-2 font-normal" style={{ letterSpacing: 0 }}>
+            {formatTime(timeRemaining)} Time Remaining
+          </span>
         </div>
       </div>
     </div>

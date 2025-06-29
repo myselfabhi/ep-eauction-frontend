@@ -28,6 +28,12 @@ type LotData = {
   lotCount?: number | string;
 };
 
+type CostParams = {
+  freight?: number;
+  duty?: number;
+  [key: string]: number | undefined;
+};
+
 type AuctionData = {
   title?: string;
   description?: string;
@@ -40,7 +46,7 @@ type AuctionData = {
   extensionMinutes?: number;
   invitedSuppliers?: string[];
   previewEmail?: string;
-  costParams?: any;
+  costParams?: CostParams;
   lots?: LotData[];
 };
 
@@ -150,7 +156,7 @@ export default function CreateAuctionPage() {
       endTime,
       autoExtension,
       extensionMinutes,
-      invitedSuppliers,
+      // invitedSuppliers,
       costParams,
       lots,
     } = auctionData;
@@ -206,7 +212,7 @@ export default function CreateAuctionPage() {
       } else {
         alert(data.message || 'Auction creation failed');
       }
-    } catch (error) {
+    } catch {
       setLoading(false);
       alert('Network error');
     }
