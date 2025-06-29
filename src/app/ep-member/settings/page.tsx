@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DashboardLayout from '@/components/shared/DashboardLayout';
@@ -9,6 +9,22 @@ import InviteUserModal from '@/components/ui/modal/InviteUserModal';
 export default function SettingsPage() {
   const router = useRouter();
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('epUser');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setName(user.name || '');
+        setRole(user.role || '');
+      } catch (err) {
+        console.error('Invalid user data in localStorage:', err);
+      }
+    }
+  }, []);
 
   return (
     <DashboardLayout>
@@ -26,7 +42,7 @@ export default function SettingsPage() {
             <label className="block text-sm mb-1 text-body">Name</label>
             <input
               type="text"
-              value="Anab Akhtar"
+              value={name}
               readOnly
               className="w-full border border-borderInput px-3 py-2 rounded text-sm bg-background cursor-not-allowed text-body"
             />
@@ -35,7 +51,7 @@ export default function SettingsPage() {
             <label className="block text-sm mb-1 text-body">Email</label>
             <input
               type="text"
-              value="user@email.com"
+              value="(Coming Soon)"
               readOnly
               className="w-full border border-borderInput px-3 py-2 rounded text-sm bg-background cursor-not-allowed text-body"
             />
@@ -44,7 +60,7 @@ export default function SettingsPage() {
             <label className="block text-sm mb-1 text-body">Role</label>
             <input
               type="text"
-              value="Admin"
+              value={role}
               readOnly
               className="w-full border border-borderInput px-3 py-2 rounded text-sm bg-background cursor-not-allowed text-body"
             />

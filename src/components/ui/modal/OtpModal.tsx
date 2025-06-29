@@ -12,7 +12,7 @@ export default function OtpModal({
   email: string;
   open: boolean;
   onClose: () => void;
-  onVerified: (token: string, role: string) => void;
+  onVerified: (token: string, user: { id: string; name: string; role: string }) => void;
 }) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,9 +20,13 @@ export default function OtpModal({
   const [resendTimer, setResendTimer] = useState(30);
 
   function isErrorWithMessage(e: unknown): e is { message: string } {
-  return typeof e === 'object' && e !== null && 'message' in e && typeof (e as Record<string, unknown>).message === 'string';
-}
-
+    return (
+      typeof e === 'object' &&
+      e !== null &&
+      'message' in e &&
+      typeof (e as Record<string, unknown>).message === 'string'
+    );
+  }
 
   useEffect(() => {
     if (open) {
@@ -53,16 +57,22 @@ export default function OtpModal({
         body: JSON.stringify({ email, otp }),
       });
       if (!res.ok) throw await res.json();
-      const data = await res.json();
-      onVerified(data.token, data.role);
-      onClose();
+const data = await res.json();
+
+// Save user in localStorage
+localStorage.setItem('epUser', JSON.stringify(data.user));
+
+// Continue with existing flow
+onVerified(data.token, data.user);
+onClose();
+
     } catch (err) {
-  if (isErrorWithMessage(err)) {
-    setError(err.message);
-  } else {
-    setError('Verification failed');
-  }
-} finally {
+      if (isErrorWithMessage(err)) {
+        setError(err.message);
+      } else {
+        setError('Verification failed');
+      }
+    } finally {
       setLoading(false);
     }
   };
