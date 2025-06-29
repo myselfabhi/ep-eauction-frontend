@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DutyModal from '../../../../components/ui/modal/DutyModal';
 
-const API_BASE = "https://ep-backend-j7fq.onrender.com";
 
 type Country = { _id: string; name: string };
 type Product = { _id: string; name: string; hsCode?: string };
@@ -85,7 +84,7 @@ export default function ImportDutyMatrixPage() {
 
   // Fetch countries
   const loadCountries = () => {
-    fetch(`${API_BASE}/api/import-duty/countries`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/countries`)
       .then(res => res.json())
       .then(data => setCountries(Array.isArray(data) ? data : []))
       .catch(console.error);
@@ -94,7 +93,7 @@ export default function ImportDutyMatrixPage() {
 
   // Fetch products
   const loadProducts = () => {
-    fetch(`${API_BASE}/api/import-duty/products`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`)
       .then(res => res.json())
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(console.error);
@@ -104,7 +103,7 @@ export default function ImportDutyMatrixPage() {
   // Fetch duty matrix
   const loadDuties = () => {
     setLoading(true);
-    fetch(`${API_BASE}/api/import-duty/`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/`)
       .then(res => res.json())
       .then(data => {
         setDutyRows(Array.isArray(data) ? data : []);
@@ -149,7 +148,7 @@ export default function ImportDutyMatrixPage() {
 
   const handleSaveDuty = async (product: Product, country: Country, rate: number) => {
     try {
-      await fetch(`${API_BASE}/api/import-duty/`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/`, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -167,7 +166,7 @@ export default function ImportDutyMatrixPage() {
 
   const handleAddCountry = async () => {
     if (!newCountry.trim()) return;
-    await fetch(`${API_BASE}/api/import-duty/country`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/country`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newCountry.trim() }),
@@ -179,7 +178,7 @@ export default function ImportDutyMatrixPage() {
 
   const handleAddProduct = async () => {
     if (!newProduct.trim()) return;
-    await fetch(`${API_BASE}/api/import-duty/product`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/product`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newProduct.trim() }),
@@ -197,7 +196,7 @@ export default function ImportDutyMatrixPage() {
         productId: deleteProductId ?? null,
         countryId: deleteCountryId ?? null,
       };
-      await fetch(`${API_BASE}/api/import-duty/deleteProductOrCountryWithDuties`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/deleteProductOrCountryWithDuties`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

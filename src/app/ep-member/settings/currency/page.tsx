@@ -7,7 +7,6 @@ import Image from "next/image";
 import { CurrencyRateModal } from "@/components/ui/modal/CurrencyRateModal";
 import { Button } from "@/components/ui/button";
 
-const API_BASE = "https://ep-backend-j7fq.onrender.com";
 
 // ---- Currency type definition ----
 type Currency = {
@@ -32,7 +31,7 @@ export default function WeeklyCurrencyRatesPage() {
 
   // Fetch currencies from backend
   const fetchCurrencies = () => {
-    fetch(`${API_BASE}/api/currency-rate`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/currency-rate`)
       .then((res) => res.json())
       .then((data: Currency[]) => setCurrencies(data));
   };
@@ -66,7 +65,7 @@ export default function WeeklyCurrencyRatesPage() {
 
   // Save handler (add or edit)
   const handleSave = async (data: { currency: string; code: string; rate: number }) => {
-    await fetch(`${API_BASE}/api/currency-rate`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/currency-rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -78,7 +77,7 @@ export default function WeeklyCurrencyRatesPage() {
   // Delete handler for the modal
   const handleDelete = async () => {
     if (!deleteTarget?.code) return;
-    await fetch(`${API_BASE}/api/currency-rate`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/currency-rate`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: deleteTarget.code }),

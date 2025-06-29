@@ -51,7 +51,7 @@ export default function OtpModal({
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('https://ep-backend-j7fq.onrender.com/api/auth/verify-otp', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
