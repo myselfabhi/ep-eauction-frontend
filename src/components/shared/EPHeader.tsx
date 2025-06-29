@@ -7,6 +7,7 @@ export default function EPHeader() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('epUser');
@@ -21,9 +22,18 @@ export default function EPHeader() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('epUser');
+    // Clear all session-related localStorage keys
     localStorage.removeItem('epToken');
-    router.push('/');
+    localStorage.removeItem('epUser');
+    localStorage.removeItem('auctionDraft');
+    localStorage.removeItem('auctionStep');
+
+    // Show popup and then redirect
+    setShowLogoutPopup(true);
+    setTimeout(() => {
+      setShowLogoutPopup(false);
+      router.push('/');
+    }, 1500);
   };
 
   return (
@@ -36,18 +46,13 @@ export default function EPHeader() {
         EP Auction
       </div>
 
-      {/* Profile Section */}
+      {/* Profile */}
       <div className="flex items-center gap-2 cursor-pointer relative" onClick={() => setShowDropdown(prev => !prev)}>
         <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-sm font-medium">
           {name ? name.charAt(0).toUpperCase() : 'U'}
         </div>
         <span className="text-sm">{name || 'User'}</span>
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
         </svg>
 
@@ -63,6 +68,13 @@ export default function EPHeader() {
           </div>
         )}
       </div>
+
+      {/* Logout Popup */}
+      {showLogoutPopup && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 border border-green-400 px-4 py-2 rounded shadow">
+          Logged out successfully!
+        </div>
+      )}
     </header>
   );
 }
