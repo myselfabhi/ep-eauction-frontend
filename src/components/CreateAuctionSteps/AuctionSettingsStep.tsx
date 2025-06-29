@@ -5,6 +5,7 @@ type AuctionSettingsData = {
   endTime?: string;
   autoExtension?: boolean;
   allowPause?: boolean;
+  extensionMinutes?: number; // ✅ Added this
 };
 
 type AuctionSettingsStepProps = {
@@ -56,7 +57,7 @@ export default function AuctionSettingsStep({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 col-span-2">
           <input
             id="auto-extension"
             type="checkbox"
@@ -69,7 +70,22 @@ export default function AuctionSettingsStep({
           </label>
         </div>
 
-        <div className="flex items-center gap-2">
+        {data.autoExtension && (
+          <div>
+            <label className="block text-sm mb-1">Extension Minutes</label>
+            <input
+              type="number"
+              placeholder="e.g. 2"
+              className="w-full border px-3 py-2 rounded text-sm border-[#DDE1EB]"
+              value={data.extensionMinutes ?? ''}
+              onChange={(e) =>
+                onChange({ extensionMinutes: Number(e.target.value) || undefined })
+              }
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 col-span-2">
           <input
             id="allow-pause"
             type="checkbox"

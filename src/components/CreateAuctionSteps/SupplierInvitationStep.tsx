@@ -1,8 +1,13 @@
 import { useRef, useState } from "react";
 import { X, User2 } from "lucide-react";
 
-type SupplierInvitationData = {
-  suppliers: string[];
+export type Supplier = {
+  _id: string;
+  email: string;
+};
+
+export type SupplierInvitationData = {
+  suppliers: Supplier[];
   previewEmail?: string;
 };
 
@@ -23,7 +28,7 @@ export default function SupplierInvitationStep({
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const suppliers: string[] = data.suppliers || [];
+  const suppliers = data.suppliers || [];
 
   const handleAdd = (email: string) => {
     const cleaned = email.trim();
@@ -32,18 +37,22 @@ export default function SupplierInvitationStep({
       setError("Invalid email address");
       return;
     }
-    if (suppliers.includes(cleaned)) {
+    if (suppliers.some((s) => s.email === cleaned)) {
       setError("Email already added");
       return;
     }
     setError("");
-    onChange({ suppliers: [...suppliers, cleaned] });
+    const newSupplier: Supplier = {
+      _id: cleaned, // treat email as ID temporarily
+      email: cleaned,
+    };
+    onChange({ suppliers: [...suppliers, newSupplier] });
     setInput("");
     inputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+    if (["Enter", ",", "Tab"].includes(e.key)) {
       if (input.trim()) {
         e.preventDefault();
         handleAdd(input);
@@ -52,7 +61,9 @@ export default function SupplierInvitationStep({
   };
 
   const handleRemove = (email: string) => {
-    onChange({ suppliers: suppliers.filter((s) => s !== email) });
+    onChange({
+      suppliers: suppliers.filter((s) => s.email !== email),
+    });
     inputRef.current?.focus();
   };
 
@@ -84,11 +95,10 @@ export default function SupplierInvitationStep({
                     : "border-[#DDE1EB]"
                 }`}
                 style={{ minWidth: 0 }}
-                aria-label="Add supplier email"
                 autoComplete="off"
               />
               {emailRegex.test(input.trim()) &&
-                !suppliers.includes(input.trim()) &&
+                !suppliers.some((s) => s.email === input.trim()) &&
                 input.trim() && (
                   <button
                     type="button"
@@ -138,22 +148,22 @@ export default function SupplierInvitationStep({
                 No suppliers invited yet.
               </span>
             ) : (
-              suppliers.map((email) => (
+              suppliers.map((s) => (
                 <span
-                  key={email}
+                  key={s._id}
                   className="flex items-center gap-2 bg-white border border-[#DDE1EB] px-3 py-2 rounded-[8px] text-[15px] text-[#222] font-normal transition-shadow hover:shadow-md focus-within:shadow-md"
                   tabIndex={-1}
                 >
                   <User2 className="w-4 h-4 text-[#3772FF] shrink-0" aria-hidden />
-                  <span className="truncate max-w-[160px]">{email}</span>
+                  <span className="truncate max-w-[160px]">{s.email}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemove(email)}
+                    onClick={() => handleRemove(s.email)}
                     className="ml-1 rounded hover:bg-red-50 focus:bg-red-50 text-gray-400 hover:text-red-600 focus:text-red-600 transition-colors"
-                    aria-label={`Remove ${email}`}
+                    aria-label={`Remove ${s.email}`}
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") handleRemove(email);
+                      if (e.key === "Enter" || e.key === " ") handleRemove(s.email);
                     }}
                   >
                     <X size={16} />

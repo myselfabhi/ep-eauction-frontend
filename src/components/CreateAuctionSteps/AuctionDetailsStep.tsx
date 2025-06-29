@@ -4,6 +4,8 @@ type AuctionDetailsData = {
   sapCode?: string;
   reservePrice?: number | string;
   currency?: string;
+  description?: string;
+  category?: string;
 };
 
 type AuctionDetailsStepProps = {
@@ -97,6 +99,38 @@ export default function AuctionDetailsStep({
             onChange={(e) => onChange({ currency: e.target.value })}
           />
           {showErrors && !data.currency && (
+            <span className="text-xs text-red-500">Required</span>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm mb-1">Category</label>
+          <input
+            type="text"
+            placeholder="Auction Category"
+            className={`w-full border px-3 py-2 rounded text-sm ${
+              showErrors && !data.category ? 'border-red-500' : 'border-[#DDE1EB]'
+            }`}
+            value={data.category || ''}
+            onChange={(e) => onChange({ category: e.target.value })}
+          />
+          {showErrors && !data.category && (
+            <span className="text-xs text-red-500">Required</span>
+          )}
+        </div>
+
+        <div className="col-span-2">
+          <label className="block text-sm mb-1">Description</label>
+          <textarea
+            placeholder="Describe the auction"
+            rows={3}
+            className={`w-full border px-3 py-2 rounded text-sm ${
+              showErrors && !data.description ? 'border-red-500' : 'border-[#DDE1EB]'
+            }`}
+            value={data.description || ''}
+            onChange={(e) => onChange({ description: e.target.value })}
+          />
+          {showErrors && !data.description && (
             <span className="text-xs text-red-500">Required</span>
           )}
         </div>

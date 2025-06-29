@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 
 type Props = {
   open: boolean;
@@ -7,21 +7,37 @@ type Props = {
 };
 
 export default function ConfirmBidModal({ open, onCancel, onConfirm }: Props) {
-  useEffect(() => {
-    if (!open) return;
-    const handle = (e: KeyboardEvent) => {
+  const handleKey = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
       if (e.key === 'Enter') onConfirm();
+    },
+    [onCancel, onConfirm]
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = ''; // Restore scroll
     };
-    window.addEventListener('keydown', handle);
-    return () => window.removeEventListener('keydown', handle);
-  }, [open, onCancel, onConfirm]);
+  }, [open, handleKey]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-      <div className="bg-white rounded-[16px] px-8 py-7 shadow-2xl w-[420px] max-w-[94vw] flex flex-col items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+      role="dialog"
+      aria-modal="true"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-[16px] px-8 py-7 shadow-2xl w-[420px] max-w-[94vw] flex flex-col items-center"
+        onClick={(e) => e.stopPropagation()} // prevent close on modal content click
+      >
         <h2 className="text-[20px] font-semibold mb-2 text-center tracking-tight">
           Confirm Your Bid
         </h2>
