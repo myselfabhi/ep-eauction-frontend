@@ -25,6 +25,16 @@ export default function ProductLotStep({ data, onChange, showErrors }: ProductLo
     });
   };
 
+  const hsCodeOptions = [
+  { code: "390110", label: "390110 – Polyethylene (PE)" },
+  { code: "390120", label: "390120 – Polypropylene (PP)" },
+  { code: "271019", label: "271019 – Light Oils & Preparations" },
+  { code: "730890", label: "730890 – Iron/Steel Structures" },
+  { code: "847130", label: "847130 – Portable Digital Computers" },
+  { code: "870322", label: "870322 – Motor Cars, 1500-3000cc" },
+  { code: "870899", label: "870899 – Auto Parts" },
+  // ...add as many as you like
+];
   return (
     <div>
       <div className="bg-[#F9FAFB] border border-[#EAECF0] rounded p-6 space-y-4">
@@ -41,15 +51,20 @@ export default function ProductLotStep({ data, onChange, showErrors }: ProductLo
           </div>
 
           <div>
-            <label className="block text-sm mb-1">HS Code</label>
-            <input
-              type="text"
-              placeholder="HS Code"
-              className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
-              value={data.hsCode || ''}
-              onChange={e => onChange({ hsCode: e.target.value })}
-            />
-          </div>
+  <label className="block text-sm mb-1">HS Code</label>
+  <select
+    className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
+    value={data.hsCode || ''}
+    onChange={e => onChange({ hsCode: e.target.value })}
+  >
+    <option value="">Select HS Code</option>
+    {hsCodeOptions.map(opt => (
+      <option key={opt.code} value={opt.code}>
+        {opt.label}
+      </option>
+    ))}
+  </select>
+</div>
 
           <div>
             <label className="block text-sm mb-1">Product Name</label>
@@ -116,7 +131,7 @@ export default function ProductLotStep({ data, onChange, showErrors }: ProductLo
         </div>
 
         <div>
-          <label className="block text-sm mb-1">LOT Count</label>
+          <label className="block text-sm mb-1">Volume</label>
           <input
             type="number"
             placeholder="Number of LOTs"

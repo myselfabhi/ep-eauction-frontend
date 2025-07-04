@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { X, User2 } from "lucide-react";
+import { X, User2, Pencil, Save } from "lucide-react";
 
 export type Supplier = {
   _id: string;
@@ -19,6 +19,15 @@ type SupplierInvitationStepProps = {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const DEFAULT_PREVIEW = `Dear Supplier,
+
+You are invited to participate in our upcoming reverse auction for Q1 2025 Raw Materials Procurement. This auction includes multiple LOTs covering various materials and components.
+
+Please review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.
+
+Best regards,
+Procurement Team`;
+
 export default function SupplierInvitationStep({
   data,
   onChange,
@@ -26,9 +35,17 @@ export default function SupplierInvitationStep({
 }: SupplierInvitationStepProps) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [previewValue, setPreviewValue] = useState(data.previewEmail || DEFAULT_PREVIEW);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suppliers = data.suppliers || [];
+
+  // Update local previewValue if external changes (rare, but safe)
+  // (optional: can omit if not using state lift)
+  // useEffect(() => {
+  //   setPreviewValue(data.previewEmail || DEFAULT_PREVIEW);
+  // }, [data.previewEmail]);
 
   const handleAdd = (email: string) => {
     const cleaned = email.trim();
@@ -43,7 +60,7 @@ export default function SupplierInvitationStep({
     }
     setError("");
     const newSupplier: Supplier = {
-      _id: cleaned, // treat email as ID temporarily
+      _id: cleaned,
       email: cleaned,
     };
     onChange({ suppliers: [...suppliers, newSupplier] });
@@ -67,14 +84,22 @@ export default function SupplierInvitationStep({
     inputRef.current?.focus();
   };
 
+  const handleEditClick = () => setEditMode(true);
+
+  const handleSaveClick = () => {
+    setEditMode(false);
+    onChange({ previewEmail: previewValue });
+  };
+
   return (
-    <form className="flex flex-col min-h-[calc(100vh-120px)]">
+    <form className="flex flex-col ">
       <div className="flex-1">
         <h2 className="text-xl font-semibold mb-1">Select and invite suppliers</h2>
         <p className="text-sm text-[#5E5E65] mb-7">
           Only invited suppliers will receive access to this auction
         </p>
 
+        {/* Email input row */}
         <div className="grid grid-cols-2 gap-6 mb-4">
           <div>
             <label className="block text-sm mb-1 font-medium">Supplier Email Addresses</label>
@@ -137,6 +162,7 @@ export default function SupplierInvitationStep({
           </div>
         </div>
 
+        {/* Supplier chips */}
         <div className="bg-[#F8FAFC] border border-[#E1E6F0] rounded-xl px-5 py-4 mb-6">
           <div className="font-medium text-[15px] mb-3">
             Invited suppliers{" "}
@@ -174,24 +200,43 @@ export default function SupplierInvitationStep({
           </div>
         </div>
 
-        <div className="border border-[#E1E6F0] rounded-xl bg-[#FCFCFD] p-5">
-          <div className="font-medium mb-2 text-[15px]">Email Preview</div>
-          <textarea
-            className="w-full bg-transparent border-none p-0 text-[15px] leading-relaxed resize-none min-h-[140px] focus:ring-0 focus:outline-none"
-            value={
-              data.previewEmail ||
-              `Dear Supplier,
-
-You are invited to participate in our upcoming reverse auction for Q1 2025 Raw Materials Procurement. This auction includes multiple LOTs covering various materials and components.
-
-Please review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.
-
-Best regards,
-Procurement Team`
-            }
-            readOnly
-            tabIndex={-1}
-          />
+        <div className="border border-[#E1E6F0] rounded-xl bg-[#FCFCFD] px-5 py-5 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-[15px]">Email Preview</span>
+            {editMode ? (
+              <button
+                type="button"
+                className="text-green-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-green-200 hover:bg-green-50"
+                onClick={handleSaveClick}
+              >
+                <Save size={14} /> Save
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                onClick={handleEditClick}
+              >
+                <Pencil size={14} /> Edit
+              </button>
+            )}
+          </div>
+          {editMode ? (
+            <textarea
+              className="w-full border border-blue-300 rounded-lg bg-white px-3 py-2 text-[15px] leading-relaxed min-h-[240px] resize-y focus:ring-2 focus:ring-blue-200 outline-none"
+              value={previewValue}
+              onChange={e => setPreviewValue(e.target.value)}
+              autoFocus
+            />
+          ) : (
+            <textarea
+              className="w-full border-none bg-transparent p-0 text-[15px] leading-relaxed min-h-[240px] resize-none focus:ring-0 focus:outline-none"
+              value={previewValue}
+              readOnly
+              tabIndex={-1}
+              style={{ minHeight: "240px", height: "100%", width: "100%" }}
+            />
+          )}
         </div>
       </div>
     </form>
