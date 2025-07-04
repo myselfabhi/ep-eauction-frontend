@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Auction } from '@/types/auction';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function getRemainingTime(endTime: string): string {
   const end = new Date(endTime).getTime();
@@ -211,46 +217,64 @@ export default function AuctionTable({
                         Monitor
                       </button>
                     )}
-                    <button
-                      className="p-1 border rounded hover:bg-background"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setOpenAction(openAction === index ? null : index);
-                      }}
-                    >
-                      •••
-                    </button>
-                    {openAction === index && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg z-[9999] py-1"
-                      >
-                        <button
-                          onClick={() => router.push('/dummy/edit-time')}
-                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-                        >
-                          <span>Edit time</span>
-                          <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
-                        </button>
-                        <div className="border-t border-border" />
-                        <button
-                          onClick={() => router.push('/dummy/edit-details')}
-                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-                        >
-                          <span>Edit Details</span>
-                          <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
-                        </button>
-                        <div className="border-t border-border" />
-                        <button
-                          onClick={() => router.push('/dummy/download-report')}
-                          className="w-full flex items-center justify-between px-4 py-2 text-sm text-body hover:bg-gray-100"
-                        >
-                          <span>Download Report</span>
-                          <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
-                        </button>
-                      </div>
-                    )}
+                    
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <button
+      className="p-1 border rounded hover:bg-background"
+      onClick={e => {
+        e.stopPropagation();
+        e.preventDefault();
+        setOpenAction(openAction === index ? null : index);
+      }}
+      aria-label="Row actions"
+    >
+      •••
+    </button>
+  </DropdownMenuTrigger>
+  {openAction === index && (
+    <DropdownMenuContent
+      className="w-48 z-[9999]"
+      align="end"
+      onInteractOutside={e => e.preventDefault()}
+      // closes when you select
+      onCloseAutoFocus={() => setOpenAction(null)}
+    >
+      <DropdownMenuItem
+        onClick={() => {
+          setOpenAction(null);
+          router.push('/dummy/edit-time');
+        }}
+        className="flex items-center justify-between"
+      >
+        <span>Edit time</span>
+        <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          setOpenAction(null);
+          router.push('/dummy/edit-details');
+        }}
+        className="flex items-center justify-between"
+      >
+        <span>Edit Details</span>
+        <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          setOpenAction(null);
+          router.push('/dummy/download-report');
+        }}
+        className="flex items-center justify-between"
+      >
+        <span>Download Report</span>
+        <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  )}
+</DropdownMenu>
+
                   </div>
                 </td>
               </tr>

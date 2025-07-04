@@ -1,5 +1,11 @@
 import { useRef, useState } from "react";
-import { X, User2, Pencil, Save } from "lucide-react";
+import { X, User2, Pencil, Save, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type Supplier = {
   _id: string;
@@ -40,12 +46,6 @@ export default function SupplierInvitationStep({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suppliers = data.suppliers || [];
-
-  // Update local previewValue if external changes (rare, but safe)
-  // (optional: can omit if not using state lift)
-  // useEffect(() => {
-  //   setPreviewValue(data.previewEmail || DEFAULT_PREVIEW);
-  // }, [data.previewEmail]);
 
   const handleAdd = (email: string) => {
     const cleaned = email.trim();
@@ -151,14 +151,27 @@ export default function SupplierInvitationStep({
             )}
           </div>
 
+          {/* DropdownMenu instead of select */}
           <div>
             <label className="block text-sm mb-1 font-medium">Selection Dropdown</label>
-            <select
-              className="w-full border border-[#DDE1EB] px-3 py-2 rounded-lg text-sm bg-white"
-              disabled
-            >
-              <option>Select from supplier list</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full flex justify-between items-center border border-[#DDE1EB] px-3 py-2 rounded-lg bg-white text-sm transition cursor-not-allowed opacity-70"
+                  disabled
+                >
+                  <span>Select from supplier list</span>
+                  <ChevronDown className="ml-2 w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              {/* Content is not needed as dropdown is visually disabled */}
+              <DropdownMenuContent>
+                <DropdownMenuItem disabled>
+                  No supplier list (demo)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -177,7 +190,7 @@ export default function SupplierInvitationStep({
               suppliers.map((s) => (
                 <span
                   key={s._id}
-                  className="flex items-center gap-2 bg-white border border-[#DDE1EB] px-3 py-2 rounded-[8px] text-[15px] text-[#222] font-normal transition-shadow hover:shadow-md focus-within:shadow-md"
+                  className="flex items-center gap-2 bg-white border border-[#DDE1E6F0] px-3 py-2 rounded-[8px] text-[15px] text-[#222] font-normal transition-shadow hover:shadow-md focus-within:shadow-md"
                   tabIndex={-1}
                 >
                   <User2 className="w-4 h-4 text-[#3772FF] shrink-0" aria-hidden />
