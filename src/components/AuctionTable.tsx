@@ -4,12 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Auction } from '@/types/auction';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import EditableReviewModal from './ui/modal/EditableReviewModal';
 
 function getRemainingTime(endTime: string): string {
   const end = new Date(endTime).getTime();
@@ -46,8 +41,10 @@ export default function AuctionTable({
   loading: boolean;
 }) {
   const router = useRouter();
-  const [openAction, setOpenAction] = useState<number | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editAuction, setEditAuction] = useState<Auction | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [openAction, setOpenAction] = useState<number | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
 
   const tabStatusMap = {
@@ -89,7 +86,14 @@ export default function AuctionTable({
   }, [selectedRows, tab, searchQuery, filtered.length]);
 
   useEffect(() => {
-    const handleMouseDown = () => setOpenAction(null);
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dropdown-menu')) {
+        setTimeout(() => {
+          setOpenAction(null);
+        }, 50);
+      }
+    };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
@@ -109,7 +113,7 @@ export default function AuctionTable({
                 onChange={toggleAll}
               />
             </th>
-            {['Title', 'Status', 'Time/date', 'Suppliers', 'Lots'].map((col) => (
+            {["Title", "Status", "Time/date", "Suppliers", "Lots"].map((col) => (
               <th
                 key={col}
                 className="px-4 py-3 font-medium border-r border-border text-left"
@@ -207,7 +211,7 @@ export default function AuctionTable({
                   {auction.lots?.length ?? 0} lots
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="relative flex justify-end items-center gap-2">
+                  <div className="relative flex justify-end items-center gap-2 dropdown-menu">
                     {auction.status === 'Active' && (
                       <button
                         onClick={() => onMonitorClick(auction._id)}
@@ -217,64 +221,43 @@ export default function AuctionTable({
                         Monitor
                       </button>
                     )}
-                    
-
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <button
-      className="p-1 border rounded hover:bg-background"
-      onClick={e => {
-        e.stopPropagation();
-        e.preventDefault();
-        setOpenAction(openAction === index ? null : index);
-      }}
-      aria-label="Row actions"
-    >
-      •••
-    </button>
-  </DropdownMenuTrigger>
-  {openAction === index && (
-    <DropdownMenuContent
-      className="w-48 z-[9999]"
-      align="end"
-      onInteractOutside={e => e.preventDefault()}
-      // closes when you select
-      onCloseAutoFocus={() => setOpenAction(null)}
-    >
-      <DropdownMenuItem
-        onClick={() => {
-          setOpenAction(null);
-          router.push('/dummy/edit-time');
-        }}
-        className="flex items-center justify-between"
-      >
-        <span>Edit time</span>
-        <Image src="/icons/edit.svg" alt="Edit Time" width={16} height={16} />
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => {
-          setOpenAction(null);
-          router.push('/dummy/edit-details');
-        }}
-        className="flex items-center justify-between"
-      >
-        <span>Edit Details</span>
-        <Image src="/icons/edit_pen.svg" alt="Edit Details" width={16} height={16} />
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => {
-          setOpenAction(null);
-          router.push('/dummy/download-report');
-        }}
-        className="flex items-center justify-between"
-      >
-        <span>Download Report</span>
-        <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  )}
-</DropdownMenu>
-
+                    <button
+                      className="p-1 border rounded hover:bg-background"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenAction(openAction === index ? null : index);
+                      }}
+                      aria-label="Row actions"
+                    >
+                      •••
+                    </button>
+                    {openAction === index && (
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-white border rounded shadow z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('✅ Edit clicked');
+                            setEditAuction(auction);
+                            setEditModalOpen(true);
+                            setOpenAction(null);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
+                        >
+                          <span>Edit Auction</span>
+                          <Image src="/icons/edit_pen.svg" alt="Edit Auction" width={16} height={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setOpenAction(null);
+                            router.push('/dummy/download-report');
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
+                        >
+                          <span>Download Report</span>
+                          <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -282,6 +265,48 @@ export default function AuctionTable({
           })}
         </tbody>
       </table>
+      {editAuction && (
+        <EditableReviewModal
+          open={editModalOpen}
+          onClose={() => {
+            console.log('[Modal] Closed');
+            setEditModalOpen(false);
+          }}
+          initialData={{
+            ...editAuction,
+            invitedSuppliers: editAuction.invitedSuppliers.map(user => user._id),
+          }}
+          suppliers={editAuction.invitedSuppliers.map(user => ({
+            _id: user._id,
+            email: user.email,
+          }))}
+          onSave={async (updatedData) => {
+            console.log('[Modal] Saving updated auction:', updatedData);
+            try {
+              const token = localStorage.getItem('token');
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/update/${editAuction._id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(updatedData),
+              });
+
+              if (res.ok) {
+                alert('Auction updated successfully!');
+                setEditModalOpen(false);
+                console.log('[Modal] Saved and closed');
+              } else {
+                const err = await res.json();
+                alert(err.message || 'Update failed');
+              }
+            } catch {
+              alert('Network error');
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
