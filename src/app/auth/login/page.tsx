@@ -40,11 +40,24 @@ export default function LoginPage() {
     }
   };
 
-const handleOtpVerified = (token: string, user: { id: string; name: string; role: string }) => {
+const handleOtpVerified = (
+  token: string,
+  user: { id: string; name: string; role: string }
+) => {
   localStorage.setItem('token', token);
   localStorage.setItem('epUser', JSON.stringify(user));
+
   const role = user.role.toLowerCase();
-  router.push(role === 'supplier' ? '/supplier/dashboard' : '/ep-member/dashboard');
+
+  const epMemberRoles = ['admin', 'viewer', 'manager'];
+
+  if (epMemberRoles.includes(role)) {
+    router.push('/ep-member/dashboard');
+  } else if (role === 'supplier') {
+    router.push('/supplier/dashboard');
+  } else {
+    router.push('/unauthorized'); // Optional fallback for unknown roles
+  }
 };
 
 
