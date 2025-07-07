@@ -147,10 +147,10 @@ export default function SupplierDashboard() {
 
                   return (
                     <div
-                      key={auction.id}
-                      className={`relative w-[355px] min-h-[265px] bg-white pb-8 pt-7 px-8 border-2 ${borderColor} rounded-[18px] flex flex-col`}
-                    >
-                      <div className={`absolute top-0 left-0 w-full h-[8px] ${topBorderColor} rounded-t-[18px]`} />
+  key={auction.id}
+  className={`relative w-[355px] min-h-[265px] bg-white pb-8 pt-7 px-8 border-2 ${borderColor} rounded-[18px] flex flex-col overflow-hidden`}
+>
+  <div className={`absolute top-0 left-0 w-full h-[8px] ${topBorderColor}`} />
                       <span className={`absolute left-7 top-4 px-3 py-1 text-xs font-medium rounded-full ${badgeBg} ${badgeText}`}>{auction.status.toUpperCase()}</span>
 
                       <div className="flex-1 flex flex-col justify-end mt-7">
