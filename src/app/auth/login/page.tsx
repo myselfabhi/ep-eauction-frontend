@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios, { AxiosError } from 'axios';
 import OtpModal from '@/components/ui/modal/OtpModal';
+import ForgotPasswordModal from '@/components/ui/modal/ForgotPasswordModal';
 import Loader from '@/components/shared/Loader';
 
 export default function LoginPage() {
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,26 +42,24 @@ export default function LoginPage() {
     }
   };
 
-const handleOtpVerified = (
-  token: string,
-  user: { id: string; name: string; role: string }
-) => {
-  localStorage.setItem('token', token);
-  localStorage.setItem('epUser', JSON.stringify(user));
+  const handleOtpVerified = (
+    token: string,
+    user: { id: string; name: string; role: string; email: string }
+  ) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('epUser', JSON.stringify(user));
 
-  const role = user.role.toLowerCase();
+    const role = user.role.toLowerCase();
+    const epMemberRoles = ['admin', 'viewer', 'manager'];
 
-  const epMemberRoles = ['admin', 'viewer', 'manager'];
-
-  if (epMemberRoles.includes(role)) {
-    router.push('/ep-member/dashboard');
-  } else if (role === 'supplier') {
-    router.push('/supplier/dashboard');
-  } else {
-    router.push('/unauthorized'); // Optional fallback for unknown roles
-  }
-};
-
+    if (epMemberRoles.includes(role)) {
+      router.push('/ep-member/dashboard');
+    } else if (role === 'supplier') {
+      router.push('/supplier/dashboard');
+    } else {
+      router.push('/unauthorized');
+    }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#F9FAFB] px-4">
@@ -74,7 +74,6 @@ const handleOtpVerified = (
             Login into your account
           </h2>
 
-          {/* Error message */}
           {error && (
             <p className="text-red-600 text-sm text-center mb-4">{error}</p>
           )}
@@ -112,11 +111,10 @@ const handleOtpVerified = (
             </div>
           </div>
 
-          {/* Forgot Password */}
           <div className="text-right text-xs mb-4">
             <button
               type="button"
-              onClick={() => router.push('/auth/forgot-password')}
+              onClick={() => setShowForgotPassword(true)}
               className="text-blue-600 hover:underline"
             >
               Forgot Password?
@@ -127,20 +125,8 @@ const handleOtpVerified = (
             type="submit"
             className="w-full bg-[#007AFF] text-white text-sm font-medium py-2 rounded hover:opacity-90 transition"
           >
-            {loading ? <Loader /> : 'Login'}
+            Login
           </button>
-
-          {/* Register link (optional) */}
-          {/* <div className="mt-6 text-center">
-            <span className="text-sm text-gray-600">New user? </span>
-            <button
-              type="button"
-              onClick={() => router.push('/auth/ep-register')}
-              className="text-sm text-blue-600 underline hover:no-underline hover:text-blue-800 transition"
-            >
-              Register here
-            </button>
-          </div> */}
         </form>
       )}
 
@@ -149,6 +135,11 @@ const handleOtpVerified = (
         open={showOtp}
         onClose={() => setShowOtp(false)}
         onVerified={handleOtpVerified}
+      />
+
+      <ForgotPasswordModal
+        open={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
       />
     </main>
   );
