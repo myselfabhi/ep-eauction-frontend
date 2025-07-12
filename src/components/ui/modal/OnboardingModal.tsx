@@ -28,12 +28,7 @@ export default function OnboardingModal({
     form.password && form.confirmPassword && form.password === form.confirmPassword;
 
   const canProceed =
-    agreed &&
-    emailValid &&
-    passwordsMatch &&
-    form.name &&
-    form.port &&
-    form.country;
+    agreed && emailValid && passwordsMatch && form.name && form.port && form.country;
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -45,7 +40,7 @@ export default function OnboardingModal({
       onComplete({
         email: form.email,
         password: form.password,
-        name: form.name,
+        name: form.name, // same as companyName
         port: form.port,
         country: form.country,
       });
@@ -70,7 +65,7 @@ export default function OnboardingModal({
                 type="email"
                 value={form.email}
                 onChange={e => handleChange('email', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
                 placeholder="your@email.com"
               />
               {!emailValid && form.email && (
@@ -84,7 +79,7 @@ export default function OnboardingModal({
                 type="password"
                 value={form.password}
                 onChange={e => handleChange('password', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
                 placeholder="New password"
               />
             </div>
@@ -95,7 +90,7 @@ export default function OnboardingModal({
                 type="password"
                 value={form.confirmPassword}
                 onChange={e => handleChange('confirmPassword', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
                 placeholder="Confirm password"
               />
               {!passwordsMatch && form.confirmPassword && (
@@ -109,7 +104,7 @@ export default function OnboardingModal({
                 type="text"
                 value={form.name}
                 onChange={e => handleChange('name', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
                 placeholder="Your Company Name"
               />
             </div>
@@ -119,9 +114,9 @@ export default function OnboardingModal({
               <select
                 value={form.port}
                 onChange={e => handleChange('port', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
               >
-                <option value="">Select from port list</option>
+                <option value="">Select port</option>
                 <option value="Mumbai">Mumbai</option>
                 <option value="Chennai">Chennai</option>
                 <option value="Kolkata">Kolkata</option>
@@ -133,9 +128,9 @@ export default function OnboardingModal({
               <select
                 value={form.country}
                 onChange={e => handleChange('country', e.target.value)}
-                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full border rounded-md text-xs px-3 py-2"
               >
-                <option value="">Select from country list</option>
+                <option value="">Select country</option>
                 <option value="India">India</option>
                 <option value="UAE">UAE</option>
                 <option value="UK">UK</option>
@@ -149,7 +144,7 @@ export default function OnboardingModal({
               id="agree"
               checked={agreed}
               onChange={e => setAgreed(e.target.checked)}
-              className="mt-[0.15rem] h-3 w-3 rounded border-gray-300 text-blue-600"
+              className="mt-[0.15rem] h-3 w-3"
             />
             <label htmlFor="agree" className="cursor-pointer select-none">
               I confirm the above information is accurate and up-to-date.

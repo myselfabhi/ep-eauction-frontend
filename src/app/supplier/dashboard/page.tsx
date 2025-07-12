@@ -14,23 +14,6 @@ const lotsList = [
   { id: 'LOT-003', label: 'Premium Packaging Boxes' },
 ];
 
-const auctions = [
-  {
-    id: '1',
-    status: 'live',
-    title: 'Mid-June Reverse Auction',
-    startTime: 'June 15, 2025 2:00 PM',
-    eligibleLots: 4,
-  },
-  {
-    id: '2',
-    status: 'upcoming',
-    title: 'End-June Reverse Auction',
-    startTime: 'June 25, 2025 11:00 AM',
-    eligibleLots: 3,
-  },
-];
-
 export default function SupplierDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState<'active' | 'history'>('active');
@@ -39,15 +22,14 @@ export default function SupplierDashboard() {
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
+  const [auctions, setAuctions] = useState<any[]>([]); // fetched from backend
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
-
     if (editMode) {
       setCapacityModalOpen({ auctionId, readOnly: false });
       return;
     }
-
     setAuctionDetails(prev => ({ ...prev, [auctionId]: { capacities, confirmed: !isLive } }));
     setCapacityModalOpen(null);
     if (isLive) setConfirmationData({ auctionId, capacities });
@@ -63,11 +45,58 @@ export default function SupplierDashboard() {
     router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
   };
 
-  const filteredAuctions = tab === 'active' ? auctions.filter(a => a.status !== 'closed') : [];
+  const fetchAuctions = async (token: string) => {
+    try {
+      const res = await fetch('/api/auction', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch auctions');
+      const data = await res.json();
+      setAuctions(data.auctions || []); // adjust depending on response shape
+    } catch (err) {
+      console.error('Error fetching auctions:', err);
+    }
+  };
 
   return (
     <SupplierLayout>
-      {!onboardingDone && <OnboardingModal onComplete={() => setOnboardingDone(true)} />}
+      {!onboardingDone && (
+        <OnboardingModal
+          onComplete={async (data) => {
+            try {
+              const payload = {
+                name: data.name,
+                email: data.email,
+                password: data.password,
+                role: 'supplier',
+                profile: {
+                  companyName: data.name,
+                  country: data.country,
+                  portOfLoading: data.port,
+                },
+              };
+
+              const res = await fetch('/api/supplier/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+
+              if (!res.ok) throw new Error('Registration failed');
+
+              const resData = await res.json();
+              const token = resData.token;
+              localStorage.setItem('token', token);
+
+              setOnboardingDone(true);
+              await fetchAuctions(token);
+            } catch (err) {
+              console.error('Registration error:', err);
+              alert('Registration failed. Please try again.');
+            }
+          }}
+        />
+      )}
 
       {confirmationData && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center px-4">
@@ -137,79 +166,90 @@ export default function SupplierDashboard() {
           <div className="w-full max-w-7xl mx-auto">
             {tab === 'active' && (
               <div className="flex gap-8 flex-wrap">
-                {filteredAuctions.map((auction) => {
-                  const isLive = auction.status === 'live';
-                  const borderColor = isLive ? 'border-[#F04B46]' : 'border-[#2C74F6]';
-                  const topBorderColor = isLive ? 'bg-[#F04B46]' : 'bg-[#2C74F6]';
-                  const badgeBg = isLive ? 'bg-[#FDEAEA]' : 'bg-[#EAF3FF]';
-                  const badgeText = isLive ? 'text-[#F04B46]' : 'text-[#2C74F6]';
-                  const details = auctionDetails[auction.id];
+                {auctions.length === 0 ? (
+                  <p className="text-center w-full text-gray-500">No auctions available</p>
+                ) : (
+                  auctions.map((auction) => {
+                    const isLive = auction.status === 'live';
+                    const borderColor = isLive ? 'border-[#F04B46]' : 'border-[#2C74F6]';
+                    const topBorderColor = isLive ? 'bg-[#F04B46]' : 'bg-[#2C74F6]';
+                    const badgeBg = isLive ? 'bg-[#FDEAEA]' : 'bg-[#EAF3FF]';
+                    const badgeText = isLive ? 'text-[#F04B46]' : 'text-[#2C74F6]';
+                    const details = auctionDetails[auction.id];
 
-                  return (
-                    <div
-  key={auction.id}
-  className={`relative w-[355px] min-h-[265px] bg-white pb-8 pt-7 px-8 border-2 ${borderColor} rounded-[18px] flex flex-col overflow-hidden`}
->
-  <div className={`absolute top-0 left-0 w-full h-[8px] ${topBorderColor}`} />
-                      <span className={`absolute left-7 top-4 px-3 py-1 text-xs font-medium rounded-full ${badgeBg} ${badgeText}`}>{auction.status.toUpperCase()}</span>
+                    return (
+                      <div
+                        key={auction.id}
+                        className={`relative w-[355px] min-h-[265px] bg-white pb-8 pt-7 px-8 border-2 ${borderColor} rounded-[18px] flex flex-col overflow-hidden`}
+                      >
+                        <div className={`absolute top-0 left-0 w-full h-[8px] ${topBorderColor}`} />
+                        <span className={`absolute left-7 top-4 px-3 py-1 text-xs font-medium rounded-full ${badgeBg} ${badgeText}`}>
+                          {auction.status.toUpperCase()}
+                        </span>
 
-                      <div className="flex-1 flex flex-col justify-end mt-7">
-                        <div className="text-[20px] font-medium text-[#222] mb-5 mt-2">{auction.title}</div>
-                        <div className="flex justify-between text-[15px] mb-1 text-[#666]">
-                          <span>Start Time:</span>
-                          <span className="text-[#222] font-medium">{auction.startTime}</span>
-                        </div>
-                        <div className="flex justify-between text-[15px] mb-7 text-[#666]">
-                          <span>Eligible LOTs</span>
-                          <span className="text-[#222] font-medium">{auction.eligibleLots}</span>
-                        </div>
+                        <div className="flex-1 flex flex-col justify-end mt-7">
+                          <div className="text-[20px] font-medium text-[#222] mb-5 mt-2">{auction.title}</div>
+                          <div className="flex justify-between text-[15px] mb-1 text-[#666]">
+                            <span>Start Time:</span>
+                            <span className="text-[#222] font-medium">{auction.startTime}</span>
+                          </div>
+                          <div className="flex justify-between text-[15px] mb-7 text-[#666]">
+                            <span>Eligible LOTs</span>
+                            <span className="text-[#222] font-medium">{auction.eligibleLots}</span>
+                          </div>
 
-                        {isLive ? (
-                          <button
-                            className="w-full py-3 rounded-[8px] text-white text-base font-semibold uppercase tracking-wide bg-[#D23636] hover:bg-[#b52d2d]"
-                            onClick={() => {
-                              if (!details) setCapacityModalOpen({ auctionId: auction.id, readOnly: false });
-                              else if (!details.confirmed) setConfirmationData({ auctionId: auction.id, capacities: details.capacities });
-                              else router.push(`/supplier/auction/${auction.id}/live`);
-                            }}
-                          >
-                            ENTER AUCTION
-                          </button>
-                        ) : (
-                          !details ? (
+                          {isLive ? (
                             <button
-                              className="w-full py-3 rounded-[8px] border border-blue-300 bg-white text-[#2C74F6] text-base font-medium"
-                              onClick={() => setCapacityModalOpen({ auctionId: auction.id, readOnly: false })}
+                              className="w-full py-3 rounded-[8px] text-white text-base font-semibold uppercase tracking-wide bg-[#D23636] hover:bg-[#b52d2d]"
+                              onClick={() => {
+                                if (!details) setCapacityModalOpen({ auctionId: auction.id, readOnly: false });
+                                else if (!details.confirmed) setConfirmationData({ auctionId: auction.id, capacities: details.capacities });
+                                else router.push(`/supplier/auction/${auction.id}/live`);
+                              }}
                             >
-                              Fill Details
+                              ENTER AUCTION
                             </button>
                           ) : (
-                            <button
-                              className="w-full py-3 rounded-[8px] border border-blue-300 bg-white text-[#2C74F6] text-base font-medium"
-                              onClick={() => setCapacityModalOpen({ auctionId: auction.id, readOnly: true })}
-                            >
-                              View Details
-                            </button>
-                          )
-                        )}
-                      </div>
+                            !details ? (
+                              <button
+                                className="w-full py-3 rounded-[8px] border border-blue-300 bg-white text-[#2C74F6] text-base font-medium"
+                                onClick={() => setCapacityModalOpen({ auctionId: auction.id, readOnly: false })}
+                              >
+                                Fill Details
+                              </button>
+                            ) : (
+                              <button
+                                className="w-full py-3 rounded-[8px] border border-blue-300 bg-white text-[#2C74F6] text-base font-medium"
+                                onClick={() => setCapacityModalOpen({ auctionId: auction.id, readOnly: true })}
+                              >
+                                View Details
+                              </button>
+                            )
+                          )}
+                        </div>
 
-                      {capacityModalOpen?.auctionId === auction.id && (
-                        <AuctionCapacityModal
-                          open={true}
-                          auctionTitle={auction.title}
-                          auctionTime={auction.startTime}
-                          lots={lotsList}
-                          initialCapacities={details?.capacities || {}}
-                          isReadOnly={capacityModalOpen.readOnly}
-                          isLiveAuction={isLive}
-                          onClose={() => setCapacityModalOpen(null)}
-                          onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+                        :
+
+tsx
+Copy
+Edit
+{capacityModalOpen && capacityModalOpen.auctionId === auction.id && (
+  <AuctionCapacityModal
+    open={true}
+    auctionTitle={auction.title}
+    auctionTime={auction.startTime}
+    lots={lotsList}
+    initialCapacities={details?.capacities || {}}
+    isReadOnly={capacityModalOpen.readOnly}
+    isLiveAuction={isLive}
+    onClose={() => setCapacityModalOpen(null)}
+    onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
+  />
+)}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>
