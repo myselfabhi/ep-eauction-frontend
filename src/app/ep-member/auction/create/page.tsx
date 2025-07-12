@@ -12,18 +12,14 @@ import EPHeader from '@/components/shared/EPHeader';
 import AuctionBreadcrumb from '@/components/shared/AuctionBreadcrumb';
 import Loader from '@/components/shared/Loader';
 
-
+type Product = { _id: string; name: string; hsCode?: string };
 
 type LotData = {
   lotId?: string;
   hsCode?: string;
   productName?: string;
   material?: string;
-  dimensions?: {
-    l?: string;
-    w?: string;
-    h?: string;
-  };
+  dimensions?: { l?: string; w?: string; h?: string };
   prevCost?: string;
   lotCount?: number | string;
 };
@@ -48,6 +44,7 @@ type AuctionData = {
   previewEmail?: string;
   costParams?: CostParams;
   lots?: LotData[];
+  type?: string; // Single Lot or Multi Lot
 };
 
 const steps = [
@@ -62,6 +59,7 @@ export default function CreateAuctionPage() {
   const [step, setStep] = useState<number>(0);
   const [auctionData, setAuctionData] = useState<AuctionData>({});
   const [supplierObjects, setSupplierObjects] = useState<Supplier[]>([]);
+  const [importProducts, setImportProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [showErrors, setShowErrors] = useState<boolean>(false);
   const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false);
@@ -69,9 +67,13 @@ export default function CreateAuctionPage() {
 
   useEffect(() => {
     const savedStep = localStorage.getItem('auctionStep');
-    if (savedStep && !isNaN(Number(savedStep))) {
-      setStep(Number(savedStep));
-    }
+    if (savedStep && !isNaN(Number(savedStep))) setStep(Number(savedStep));
+
+    // Load import duty products for dropdown
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`)
+      .then(res => res.json())
+      .then(data => Array.isArray(data) && setImportProducts(data))
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -84,12 +86,10 @@ export default function CreateAuctionPage() {
       const parsed = JSON.parse(draft);
       setAuctionData(parsed);
       if (Array.isArray(parsed.invitedSuppliers)) {
-        setSupplierObjects(
-          parsed.invitedSuppliers.map((id: string, index: number) => ({
-            _id: id,
-            email: `supplier${index + 1}@example.com`,
-          }))
-        );
+        setSupplierObjects(parsed.invitedSuppliers.map((id: string, index: number) => ({
+          _id: id,
+          email: `supplier${index + 1}@example.com`,
+        })));
       }
     }
   }, []);
@@ -103,25 +103,12 @@ export default function CreateAuctionPage() {
   const isStepValid = () => {
     if (step === 1) {
       const lots = auctionData.lots || [];
-      return (
-        lots.length > 0 &&
-        lots.every(
-          (lot) =>
-            lot.productName?.trim() &&
-            lot.lotCount !== undefined &&
-            lot.lotCount !== ''
-        )
-      );
+      return lots.length > 0 && lots.every(lot => lot.productName?.trim() && lot.lotCount !== undefined && lot.lotCount !== '');
     }
-
     const required = requiredFieldsPerStep[step] || [];
-    return required.every((field) => {
+    return required.every(field => {
       const value = auctionData[field];
-      return (
-        value !== undefined &&
-        value !== '' &&
-        !(Array.isArray(value) && value.length === 0)
-      );
+      return value !== undefined && value !== '' && !(Array.isArray(value) && value.length === 0);
     });
   };
 
@@ -135,7 +122,7 @@ export default function CreateAuctionPage() {
   };
 
   const updateAuctionData = (data: Partial<AuctionData>) => {
-    setAuctionData((prev) => ({ ...prev, ...data }));
+    setAuctionData(prev => ({ ...prev, ...data }));
   };
 
   const saveDraft = () => {
@@ -145,65 +132,36 @@ export default function CreateAuctionPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots } = auctionData;
 
-    const {
+    const payload = {
       title,
       description,
       category,
-      reservePrice,
+      reservePrice: Number(reservePrice),
       currency,
       startTime,
       endTime,
       autoExtension,
       extensionMinutes,
-      // invitedSuppliers,
+      invitedSuppliers: supplierObjects.map(s => s._id.trim()),
       costParams,
-      lots,
-    } = auctionData;
-
-    const payload = {
-  title,
-  description,
-  category,
-  reservePrice: Number(reservePrice),
-  currency,
-  startTime,
-  endTime,
-  autoExtension,
-  extensionMinutes,
-  invitedSuppliers: supplierObjects.map((s) => s._id.trim()),
-  costParams,
-  lots: lots?.map((lot) => ({
-    ...lot,
-    lotCount: Number(lot.lotCount),
-  })),
-};
-
+      lots: lots?.map(lot => ({ ...lot, lotCount: Number(lot.lotCount) })),
+    };
 
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
 
       const resText = await res.text();
-      console.log('Status:', res.status);
-      console.log('Raw response:', resText);
-
       let data;
-      try {
-        data = JSON.parse(resText);
-      } catch {
-        data = { message: resText };
-      }
+      try { data = JSON.parse(resText); } catch { data = { message: resText }; }
 
       setLoading(false);
-
       if (res.ok || res.status === 201) {
         alert('Auction created successfully!');
         localStorage.removeItem('auctionStep');
@@ -223,36 +181,16 @@ export default function CreateAuctionPage() {
     router.push('/ep-member/dashboard');
   };
 
-  const ConfirmLaunchModal = ({
-    open,
-    onClose,
-    onConfirm,
-  }: {
-    open: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-  }) => {
+  const ConfirmLaunchModal = ({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => void; }) => {
     if (!open) return null;
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
         <div className="bg-white rounded-lg shadow-lg p-8 min-w-[350px] max-w-[95vw] flex flex-col items-center relative">
           <div className="text-lg font-semibold mb-2 text-center">Save & Launch</div>
-          <div className="text-center text-[#555] mb-6">
-            Are you sure you want to save changes & send invitations?
-          </div>
+          <div className="text-center text-[#555] mb-6">Are you sure you want to save changes & send invitations?</div>
           <div className="flex gap-3 w-full">
-            <button
-              onClick={onClose}
-              className="w-1/2 py-2 rounded border border-[#DDE1EB] text-sm font-medium bg-[#f8fafc] hover:bg-[#f3f6fb] transition"
-            >
-              Back
-            </button>
-            <button
-              onClick={onConfirm}
-              className="w-1/2 py-2 rounded bg-[#1976D2] text-white text-sm font-medium hover:bg-[#1565c0] transition"
-            >
-              Confirm
-            </button>
+            <button onClick={onClose} className="w-1/2 py-2 rounded border border-[#DDE1EB] text-sm font-medium bg-[#f8fafc] hover:bg-[#f3f6fb] transition">Back</button>
+            <button onClick={onConfirm} className="w-1/2 py-2 rounded bg-[#1976D2] text-white text-sm font-medium hover:bg-[#1565c0] transition">Confirm</button>
           </div>
         </div>
       </div>
@@ -262,48 +200,22 @@ export default function CreateAuctionPage() {
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
-        return (
-          <AuctionDetailsStep
-            data={auctionData}
-            onChange={updateAuctionData}
-            showErrors={showErrors}
-          />
-        );
+        return <AuctionDetailsStep data={auctionData} onChange={updateAuctionData} showErrors={showErrors} />;
       case 1:
-        return (
-          <ProductLotMultiStep
-            value={auctionData.lots || [{}]}
-            onChange={(lots) => updateAuctionData({ lots })}
-            showErrors={showErrors}
-          />
-        );
+        return <ProductLotMultiStep
+  value={auctionData.lots || [{}]}
+  onChange={(lots) => updateAuctionData({ lots })}
+  showErrors={showErrors}
+  auctionType={auctionData.type === 'Single Lot' ? 'single' : 'multi'}
+  importProducts={importProducts}
+  setImportProducts={setImportProducts}
+/>;
       case 2:
-        return (
-          <AuctionSettingsStep
-            data={auctionData}
-            onChange={updateAuctionData}
-            showErrors={showErrors}
-          />
-        );
+        return <AuctionSettingsStep data={auctionData} onChange={updateAuctionData} showErrors={showErrors} />;
       case 3:
-        return (
-          <SupplierInvitationStep
-            data={{
-              suppliers: supplierObjects,
-              previewEmail: auctionData.previewEmail,
-            }}
-            onChange={(updated) => {
-              updateAuctionData({
-                invitedSuppliers: (updated.suppliers || []).map((s) => s._id),
-                previewEmail: updated.previewEmail,
-              });
-              setSupplierObjects(updated.suppliers || []);
-            }}
-            showErrors={showErrors}
-          />
-        );
+        return <SupplierInvitationStep data={{ suppliers: supplierObjects, previewEmail: auctionData.previewEmail }} onChange={(updated) => { updateAuctionData({ invitedSuppliers: (updated.suppliers || []).map(s => s._id), previewEmail: updated.previewEmail }); setSupplierObjects(updated.suppliers || []); }} showErrors={showErrors} />;
       case 4:
-        return <ReviewLaunchStep data={auctionData} suppliers={supplierObjects} onSubmit={() => {}} />;
+        return <ReviewLaunchStep data={auctionData} suppliers={supplierObjects} onSubmit={() => { }} />;
       default:
         return null;
     }
@@ -317,56 +229,18 @@ export default function CreateAuctionPage() {
           <Image width={5} height={5} src="/icons/arrow_left.svg" alt="Back" className="w-4 h-4" />
           <h1 className="text-xl font-semibold">Create Auction</h1>
         </div>
-        <p className="text-sm text-[#5E5E65] mb-6">
-          Fill out the details and create a new auction
-        </p>
-
-        <AuctionBreadcrumb
-          steps={steps}
-          currentStep={step}
-          onStepClick={(index) => {
-            if (index <= step) setStep(index);
-          }}
-        />
-
-        <div className="bg-white pt-6 rounded border-t border-[#EAECF0]">
-          {renderStepContent(step)}
-        </div>
-
+        <p className="text-sm text-[#5E5E65] mb-6">Fill out the details and create a new auction</p>
+        <AuctionBreadcrumb steps={steps} currentStep={step} onStepClick={(index) => { if (index <= step) setStep(index); }} />
+        <div className="bg-white pt-6 rounded border-t border-[#EAECF0]">{renderStepContent(step)}</div>
         <div className="flex bottom-0 justify-between mt-6">
-          <button
-            className="border border-[#DDE1EB] px-4 py-2 rounded text-sm"
-            type="button"
-            onClick={saveDraft}
-          >
-            Save Draft
-          </button>
+          <button className="border border-[#DDE1EB] px-4 py-2 rounded text-sm" type="button" onClick={saveDraft}>Save Draft</button>
           <div className="flex gap-4">
-            <button
-              onClick={step === steps.length - 1 ? () => setShowLaunchModal(true) : goNext}
-              className={`px-4 py-2 bg-blue-600 text-white rounded text-sm transition ${
-                loading || !isStepValid() ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              disabled={loading || !isStepValid()}
-            >
-              {loading
-                ? 'Submitting...'
-                : step === steps.length - 1
-                ? 'Launch Auction'
-                : 'Next'}
+            <button onClick={step === steps.length - 1 ? () => setShowLaunchModal(true) : goNext} className={`px-4 py-2 bg-blue-600 text-white rounded text-sm transition ${loading || !isStepValid() ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={loading || !isStepValid()}>
+              {loading ? 'Submitting...' : step === steps.length - 1 ? 'Launch Auction' : 'Next'}
             </button>
           </div>
         </div>
-
-        <ConfirmLaunchModal
-          open={showLaunchModal}
-          onClose={() => setShowLaunchModal(false)}
-          onConfirm={() => {
-            setShowLaunchModal(false);
-            handleSubmit();
-          }}
-        />
-
+        <ConfirmLaunchModal open={showLaunchModal} onClose={() => setShowLaunchModal(false)} onConfirm={() => { setShowLaunchModal(false); handleSubmit(); }} />
         {loading && <Loader />}
       </main>
     </div>
