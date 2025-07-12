@@ -5,12 +5,35 @@ import { useState } from 'react';
 export default function OnboardingModal({
   onComplete,
 }: {
-  onComplete: (data: { name: string; port: string; country: string }) => void;
+  onComplete: (data: {
+    email: string;
+    password: string;
+    name: string;
+    port: string;
+    country: string;
+  }) => void;
 }) {
-  const [form, setForm] = useState({ name: '', port: '', country: '' });
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    port: '',
+    country: '',
+  });
   const [agreed, setAgreed] = useState(false);
 
-  const canProceed = agreed && form.name && form.port && form.country;
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const passwordsMatch =
+    form.password && form.confirmPassword && form.password === form.confirmPassword;
+
+  const canProceed =
+    agreed &&
+    emailValid &&
+    passwordsMatch &&
+    form.name &&
+    form.port &&
+    form.country;
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -18,7 +41,15 @@ export default function OnboardingModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (canProceed) onComplete(form);
+    if (canProceed) {
+      onComplete({
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        port: form.port,
+        country: form.country,
+      });
+    }
   };
 
   return (
@@ -27,12 +58,51 @@ export default function OnboardingModal({
         <div className="text-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Participant Onboarding</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Please fill in your company details to access the dashboard
+            Please fill in your details to access the dashboard
           </p>
         </div>
 
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="space-y-4 mb-5">
+            <div>
+              <label className="text-xs font-semibold mb-1 block">Email *</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => handleChange('email', e.target.value)}
+                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                placeholder="your@email.com"
+              />
+              {!emailValid && form.email && (
+                <p className="text-xs text-red-500 mt-1">Please enter a valid email.</p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold mb-1 block">New Password *</label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={e => handleChange('password', e.target.value)}
+                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                placeholder="New password"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold mb-1 block">Confirm Password *</label>
+              <input
+                type="password"
+                value={form.confirmPassword}
+                onChange={e => handleChange('confirmPassword', e.target.value)}
+                className="w-full border border-gray-200 rounded-md text-xs px-3 py-2 focus:border-blue-500 focus:outline-none"
+                placeholder="Confirm password"
+              />
+              {!passwordsMatch && form.confirmPassword && (
+                <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+              )}
+            </div>
+
             <div>
               <label className="text-xs font-semibold mb-1 block">Business Name *</label>
               <input
