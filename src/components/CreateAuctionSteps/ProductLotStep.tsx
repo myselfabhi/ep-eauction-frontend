@@ -57,9 +57,8 @@ export default function ProductLotStep({
         body: JSON.stringify({ name: customProductName.trim() }),
       });
 
-      if (!res.ok) throw new Error("Failed to add product");
+      if (!res.ok) throw new Error();
 
-      // Refresh product list
       const updatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`);
       const updatedData = await updatedRes.json();
       if (Array.isArray(updatedData)) {
@@ -68,8 +67,8 @@ export default function ProductLotStep({
 
       setCustomModalOpen(false);
       setCustomProductName("");
-      setConfirmationModalOpen(true); // ✅ Show confirmation modal
-    } catch (err) {
+      setConfirmationModalOpen(true);
+    } catch {
       alert("Failed to add product to Import Duty Matrix");
     } finally {
       setSaving(false);
@@ -109,7 +108,7 @@ export default function ProductLotStep({
               onChange={(e) => onChange({ hsCode: e.target.value })}
             >
               <option value="">Select HS Code</option>
-              {/* You can map HS codes here if needed */}
+              {/* Add HS code options here if needed */}
             </select>
           </div>
 
@@ -247,7 +246,7 @@ export default function ProductLotStep({
         </div>
       )}
 
-      {/* ✅ Confirmation modal after adding product */}
+      {/* Confirmation modal */}
       {confirmationModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm">
