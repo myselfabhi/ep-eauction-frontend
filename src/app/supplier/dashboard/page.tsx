@@ -84,7 +84,7 @@ export default function SupplierDashboard() {
                 },
               };
 
-              const res = await fetch('/api/supplier/register', {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/supplier/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
