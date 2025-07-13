@@ -8,20 +8,12 @@ import DashboardAuctionTable from '@/components/EPDashboard/DashboardAuctionTabl
 import Loader from '@/components/shared/Loader';
 import { fetchAuctions } from '@/services/auction.service';
 import { Auction } from '@/types/auction';
-import { getCurrentUser, validateSession, clearSession } from '@/lib/session';
-
-type DashboardUser = {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-};
+import { validateSession } from '@/lib/session';
 
 export default function EPDashboard() {
   const router = useRouter();
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<DashboardUser | null>(null);
 
   useEffect(() => {
     const loadAuctions = async () => {
@@ -34,11 +26,11 @@ export default function EPDashboard() {
         }
 
         // Get current user using session utility
-        const user = getCurrentUser();
-        if (user) {
-          setCurrentUser(user);
-          console.log('Current user:', user);
-        }
+        // const user = getCurrentUser();
+        // if (user) {
+        //   setCurrentUser(user);
+        //   console.log('Current user:', user);
+        // }
         
         const data = await fetchAuctions();
         console.log('Fetched auctions:', data);
@@ -56,27 +48,6 @@ export default function EPDashboard() {
 
     loadAuctions();
   }, [router]);
-
-  const handleForceLogout = () => {
-    clearSession(); // Use session utility
-    router.push('/auth/login');
-  };
-
-  const handleRefreshAuctions = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchAuctions();
-      // Sort by createdAt descending
-      const sortedAuctions = Array.isArray(data)
-        ? data.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        : data;
-      setAuctions(sortedAuctions);
-    } catch (err) {
-      console.error('Failed to refresh auctions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <DashboardLayout>
