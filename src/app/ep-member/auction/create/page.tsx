@@ -103,7 +103,7 @@ export default function CreateAuctionPage() {
   const isStepValid = () => {
     if (step === 1) {
       const lots = auctionData.lots || [];
-      return lots.length > 0 && lots.every(lot => lot.productName?.trim() && lot.lotCount !== undefined && lot.lotCount !== '');
+      return lots.length > 0 && lots.every(lot => lot.productName?.trim());
     }
     const required = requiredFieldsPerStep[step] || [];
     return required.every(field => {
@@ -134,23 +134,59 @@ export default function CreateAuctionPage() {
     setLoading(true);
     const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots } = auctionData;
 
+    // Prepare invitedSuppliers array with mixed user IDs and emails
+    const invitedSuppliers = supplierObjects.map(s => {
+      // If it's a valid MongoDB ObjectId (24 characters), use as is
+      if (s._id && s._id.length === 24 && /^[0-9a-fA-F]{24}$/.test(s._id)) {
+        return s._id.trim();
+      }
+      // Otherwise, use the email (for new suppliers)
+      return s.email;
+    });
+
+    // Validate required fields
+    if (!title || !description || !category || !currency || !startTime || !endTime) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
     const payload = {
-      title,
-      description,
-      category,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.trim(),
       reservePrice: Number(reservePrice),
-      currency,
+      currency: currency.trim(),
       startTime,
       endTime,
-      autoExtension,
-      extensionMinutes,
-      invitedSuppliers: supplierObjects.map(s => s._id.trim()),
-      costParams,
-      lots: lots?.map(lot => ({ ...lot, lotCount: Number(lot.lotCount) })),
+      autoExtension: autoExtension || false,
+      extensionMinutes: extensionMinutes || 5,
+      invitedSuppliers: invitedSuppliers || [],
+      costParams: costParams || {},
+      lots: lots?.map(lot => ({
+        lotId: lot.lotId || 'LOT001',
+        productName: lot.productName || 'Product',
+        hsCode: lot.hsCode || null,  // Send null instead of empty string
+        material: lot.material || 'Material',
+        prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
+        dimensions: lot.dimensions ? 
+          `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` : 
+          '0x0x0'
+      })) || [],
     };
 
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Please log in to create an auction.');
+        router.push('/auth/login');
+        return;
+      }
+      
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
+      console.log('Using token:', token ? `${token.substring(0, 10)}...` : 'No token');
+      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/auction/create`);
+      
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -158,8 +194,17 @@ export default function CreateAuctionPage() {
       });
 
       const resText = await res.text();
+      console.log('Response status:', res.status);
+      console.log('Response text:', resText);
+      
       let data;
-      try { data = JSON.parse(resText); } catch { data = { message: resText }; }
+      try { 
+        data = JSON.parse(resText); 
+        console.log('Parsed response:', data);
+      } catch (e) { 
+        console.log('Failed to parse response as JSON:', e);
+        data = { message: resText }; 
+      }
 
       setLoading(false);
       if (res.ok || res.status === 201) {
@@ -168,7 +213,13 @@ export default function CreateAuctionPage() {
         localStorage.removeItem('auctionDraft');
         router.push('/ep-member/dashboard');
       } else {
-        alert(data.message || 'Auction creation failed');
+        console.error('API Error:', res.status, data);
+        if (res.status === 401) {
+          alert('Authentication failed. Please log in again.');
+          router.push('/auth/login');
+        } else {
+          alert(`Auction creation failed: ${data.message || 'Unknown error'}`);
+        }
       }
     } catch {
       setLoading(false);
