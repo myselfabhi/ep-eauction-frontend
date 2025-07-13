@@ -80,33 +80,6 @@ export default function EPDashboard() {
 
   return (
     <DashboardLayout>
-      {/* Debug Info - Remove in production */}
-      {currentUser && (
-        <div className="bg-blue-50 p-4 mb-4 rounded-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium">Current User: {currentUser.name} ({currentUser.role})</p>
-              <p className="text-xs text-gray-600">ID: {currentUser.id}</p>
-              <p className="text-xs text-gray-600">Login: {localStorage.getItem('loginTimestamp')}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleRefreshAuctions}
-                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-              >
-                Refresh
-              </button>
-              <button
-                onClick={handleForceLogout}
-                className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-              >
-                Force Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {loading ? (
         <div className="flex flex-1 items-center justify-center min-h-[300px]">
           <Loader />
