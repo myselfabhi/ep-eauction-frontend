@@ -10,11 +10,18 @@ import { fetchAuctions } from '@/services/auction.service';
 import { Auction } from '@/types/auction';
 import { getCurrentUser, validateSession, clearSession } from '@/lib/session';
 
+type DashboardUser = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+};
+
 export default function EPDashboard() {
   const router = useRouter();
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<DashboardUser | null>(null);
 
   useEffect(() => {
     const loadAuctions = async () => {
