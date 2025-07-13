@@ -8,6 +8,14 @@ import SupplierLayout from '@/components/shared/SupplierLayout';
 import OnboardingModal from '@/components/ui/modal/OnboardingModal';
 import AuctionCapacityModal from '@/components/ui/modal/AuctionCapacityModal';
 
+type Auction = {
+  id: string;
+  status: 'live' | 'upcoming' | 'closed';
+  title: string;
+  startTime: string;
+  eligibleLots: number;
+};
+
 const lotsList = [
   { id: 'LOT-001', label: 'Kraft Boxes - Standard Size' },
   { id: 'LOT-002', label: 'Corrugated Shipping Boxes' },
@@ -22,7 +30,7 @@ export default function SupplierDashboard() {
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
-  const [auctions, setAuctions] = useState<any[]>([]); // fetched from backend
+  const [auctions, setAuctions] = useState<Auction[]>([]);// fetched from backend
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
