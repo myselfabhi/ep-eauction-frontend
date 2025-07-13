@@ -46,8 +46,19 @@ export default function LoginPage() {
     token: string,
     user: { id: string; name: string; role: string; email: string }
   ) => {
+    // Clear any existing session data first
+    localStorage.removeItem('token');
+    localStorage.removeItem('epUser');
+    localStorage.removeItem('adminAuth');
+    localStorage.removeItem('auctionDraft');
+    localStorage.removeItem('auctionStep');
+    
+    // Set new session data
     localStorage.setItem('token', token);
     localStorage.setItem('epUser', JSON.stringify(user));
+    
+    // Add timestamp for debugging
+    localStorage.setItem('loginTimestamp', new Date().toISOString());
 
     const role = user.role.toLowerCase();
     const epMemberRoles = ['admin', 'viewer', 'manager'];

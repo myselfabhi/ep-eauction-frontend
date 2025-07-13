@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser, clearSession } from '@/lib/session';
 
 export default function EPHeader() {
   const router = useRouter();
@@ -10,23 +11,15 @@ export default function EPHeader() {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('epUser');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        setName(user.name || '');
-      } catch (err) {
-        console.error('Invalid user in localStorage:', err);
-      }
+    const user = getCurrentUser();
+    if (user) {
+      setName(user.name || '');
     }
   }, []);
 
   const handleLogout = () => {
-    // Clear all session-related localStorage keys
-    localStorage.removeItem('epToken');
-    localStorage.removeItem('epUser');
-    localStorage.removeItem('auctionDraft');
-    localStorage.removeItem('auctionStep');
+    // Clear session using utility
+    clearSession();
 
     // Show popup and then redirect
     setShowLogoutPopup(true);

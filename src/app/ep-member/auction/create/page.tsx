@@ -165,7 +165,7 @@ export default function CreateAuctionPage() {
       lots: lots?.map(lot => ({
         lotId: lot.lotId || 'LOT001',
         productName: lot.productName || 'Product',
-        hsCode: lot.hsCode || null,  // Send null instead of empty string
+        hsCode: lot.hsCode && lot.hsCode.trim() !== '' ? lot.hsCode : '123', // Default to '123' if missing/null/empty
         material: lot.material || 'Material',
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
         dimensions: lot.dimensions ? 
