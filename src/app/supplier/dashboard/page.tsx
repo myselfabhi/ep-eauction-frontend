@@ -76,7 +76,7 @@ export default function SupplierDashboard() {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-                role: 'supplier',
+                role: 'Supplier',
                 profile: {
                   companyName: data.name,
                   country: data.country,
@@ -84,20 +84,23 @@ export default function SupplierDashboard() {
                 },
               };
 
-              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/supplier/register`, {
+              const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
               });
 
-              if (!res.ok) throw new Error('Registration failed');
+              if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Registration failed');
+              }
 
               const resData = await res.json();
-              const token = resData.token;
-              localStorage.setItem('token', token);
+              console.log('Registration successful:', resData);
 
               setOnboardingDone(true);
-              await fetchAuctions(token);
+              // Note: You'll need to implement login after registration to get a token
+              // For now, we'll just show the dashboard without fetching auctions
             } catch (err) {
               console.error('Registration error:', err);
               alert('Registration failed. Please try again.');
