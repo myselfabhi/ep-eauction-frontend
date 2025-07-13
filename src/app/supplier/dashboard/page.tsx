@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import OnboardingModal from '@/components/ui/modal/OnboardingModal';
 import AuctionCapacityModal from '@/components/ui/modal/AuctionCapacityModal';
+import { fetchAuctions } from '@/services/auction.service';
+import { Auction } from '@/types/auction';
 
-type Auction = {
+type SupplierAuction = {
   id: string;
   status: 'live' | 'upcoming' | 'closed';
   title: string;
@@ -30,7 +32,8 @@ export default function SupplierDashboard() {
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
-  const [auctions] = useState<Auction[]>([]);// fetched from backend
+  const [auctions, setAuctions] = useState<SupplierAuction[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
@@ -52,6 +55,53 @@ export default function SupplierDashboard() {
     setConfirmationData(null);
     router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
   };
+
+  // Fetch auctions on component mount
+  useEffect(() => {
+    const loadAuctions = async () => {
+      try {
+        const data = await fetchAuctions();
+        console.log('Fetched supplier auctions:', data);
+        
+        // For suppliers, the backend returns { upcoming, live, ended }
+        // We need to combine them into a single array for the UI
+        if (data && typeof data === 'object' && 'upcoming' in data) {
+          const allAuctions = [
+            ...(data.upcoming || []),
+            ...(data.live || []),
+            ...(data.ended || [])
+          ];
+          // Transform backend auction format to supplier auction format
+          const transformedAuctions: SupplierAuction[] = allAuctions.map((auction: any) => ({
+            id: auction._id || auction.id,
+            status: auction.status === 'Active' ? 'live' : auction.status === 'Scheduled' ? 'upcoming' : 'closed',
+            title: auction.title,
+            startTime: auction.startTime,
+            eligibleLots: auction.lots ? auction.lots.length : 0
+          }));
+          setAuctions(transformedAuctions);
+        } else {
+          // Fallback for EP members or if data structure is different
+          const arrayData = Array.isArray(data) ? data : [];
+          const transformedAuctions: SupplierAuction[] = arrayData.map((auction: any) => ({
+            id: auction._id || auction.id,
+            status: auction.status === 'Active' ? 'live' : auction.status === 'Scheduled' ? 'upcoming' : 'closed',
+            title: auction.title,
+            startTime: auction.startTime,
+            eligibleLots: auction.lots ? auction.lots.length : 0
+          }));
+          setAuctions(transformedAuctions);
+        }
+      } catch (err) {
+        console.error('Failed to load auctions:', err);
+        setAuctions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAuctions();
+  }, []);
 
 
 
