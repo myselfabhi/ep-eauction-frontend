@@ -26,11 +26,11 @@ export default function SupplierDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState<'active' | 'history'>('active');
   const [notifOpen, setNotifOpen] = useState(false);
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const [onboardingDone] = useState(false);
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
-  const [auctions, setAuctions] = useState<Auction[]>([]);// fetched from backend
+  const [auctions] = useState<Auction[]>([]);// fetched from backend
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
@@ -53,18 +53,7 @@ export default function SupplierDashboard() {
     router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
   };
 
-  const fetchAuctions = async (token: string) => {
-    try {
-      const res = await fetch('/api/auction', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch auctions');
-      const data = await res.json();
-      setAuctions(data.auctions || []); // adjust depending on response shape
-    } catch (err) {
-      console.error('Error fetching auctions:', err);
-    }
-  };
+
 
   return (
     <SupplierLayout>
@@ -98,9 +87,7 @@ export default function SupplierDashboard() {
               const resData = await res.json();
               console.log('Registration successful:', resData);
 
-              setOnboardingDone(true);
-              // Note: You'll need to implement login after registration to get a token
-              // For now, we'll just show the dashboard without fetching auctions
+              router.push('/auth/login');
             } catch (err) {
               console.error('Registration error:', err);
               alert('Registration failed. Please try again.');

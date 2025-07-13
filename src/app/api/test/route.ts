@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       message: 'Test endpoint working',
       receivedData: body 
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 } 
