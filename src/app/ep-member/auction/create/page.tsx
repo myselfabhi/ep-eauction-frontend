@@ -198,7 +198,15 @@ export default function CreateAuctionPage() {
     } catch (error: unknown) {
       setLoading(false);
       console.error('API Error:', error);
-      
+      // Enhanced backend error logging
+      if (typeof error === 'object' && error && 'response' in error) {
+        const err = error as any;
+        if (err.response) {
+          console.error('Backend response data:', err.response.data);
+          console.error('Backend response status:', err.response.status);
+          console.error('Backend response headers:', err.response.headers);
+        }
+      }
       const apiError = error as { response?: { status?: number; data?: { message?: string } } };
       
       if (apiError?.response?.status === 401) {

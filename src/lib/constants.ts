@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   // Auction endpoints
   AUCTION: {
     BASE: '/auction',
-    CREATE: '/auction',
+    CREATE: '/auction/create',
     GET_ALL: '/auction',
     GET_BY_ID: (id: string) => `/auction/${id}`,
     UPDATE: (id: string) => `/auction/update/${id}`,

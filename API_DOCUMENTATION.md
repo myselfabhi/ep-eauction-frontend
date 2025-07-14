@@ -141,87 +141,9 @@ The frontend has been updated to use the new API endpoint:
 
 ### Updated API Call
 ```typescript
-const res = await fetch('/api/auth/register', {
+const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(payload),
 });
 ```
-
-### Updated Payload Structure
-```typescript
-const payload = {
-  name: data.name,
-  email: data.email,
-  password: data.password,
-  role: 'Supplier', // Updated to match API requirements
-  profile: {
-    companyName: data.name,
-    country: data.country,
-    portOfLoading: data.port,
-  },
-};
-```
-
-## Testing
-
-### Test Endpoint
-A test endpoint is available at `/api/test` to verify API functionality.
-
-### Manual Testing
-You can test the registration API using tools like Postman or curl:
-
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Test Supplier",
-    "email": "test@example.com",
-    "password": "password123",
-    "role": "Supplier",
-    "profile": {
-      "companyName": "Test Company",
-      "country": "India",
-      "portOfLoading": "Mumbai"
-    }
-  }'
-```
-
-## Security Considerations
-
-1. **Password Hashing**: All passwords are hashed using bcrypt
-2. **Input Validation**: Comprehensive validation of all input fields
-3. **Role Restriction**: Only supplier registration is allowed
-4. **Email Uniqueness**: Prevents duplicate user registration
-5. **Error Handling**: Proper error responses without exposing sensitive information
-
-## Future Enhancements
-
-1. **Email Verification**: Implement email verification flow
-2. **JWT Token**: Return JWT token after successful registration
-3. **Database Integration**: Replace mock database with real database (MongoDB/PostgreSQL)
-4. **Rate Limiting**: Add rate limiting to prevent abuse
-5. **Logging**: Add comprehensive logging for monitoring
-6. **Audit Trail**: Track registration attempts and failures
-
-## Dependencies
-
-- `bcrypt`: For password hashing
-- `@types/bcrypt`: TypeScript types for bcrypt
-- `next/server`: Next.js server components
-
-## Installation
-
-The required dependencies have been installed:
-
-```bash
-npm install bcrypt @types/bcrypt
-```
-
-## Notes
-
-- Currently uses a mock database for demonstration purposes
-- Replace mock database functions with actual database calls
-- Implement proper authentication flow after registration
-- Add proper error logging and monitoring
-- Consider adding email verification before allowing login 

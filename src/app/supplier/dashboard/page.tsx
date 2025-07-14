@@ -28,11 +28,19 @@ export default function SupplierDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState<'active' | 'history'>('active');
   const [notifOpen, setNotifOpen] = useState(false);
-  const [onboardingDone] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
   const [auctions, setAuctions] = useState<SupplierAuction[]>([]);
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    const user = localStorage.getItem('epUser');
+    if (user) {
+      setOnboardingDone(true);
+    }
+  }, []);
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
@@ -127,7 +135,7 @@ export default function SupplierDashboard() {
                 },
               };
 
-              const res = await fetch('/api/auth/register', {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -140,6 +148,9 @@ export default function SupplierDashboard() {
 
               const resData = await res.json();
               console.log('Registration successful:', resData);
+
+              // Mark onboarding as done after successful registration
+              setOnboardingDone(true);
 
               router.push(ROUTES.AUTH.LOGIN);
             } catch (err) {
