@@ -200,8 +200,14 @@ export default function CreateAuctionPage() {
       console.error('API Error:', error);
       // Enhanced backend error logging
       if (typeof error === 'object' && error && 'response' in error) {
-        const err = error as any;
-        if (err.response) {
+        if (typeof error === 'object' && error && 'response' in error) {
+          const err = error as {
+            response: {
+              data?: unknown;
+              status?: number;
+              headers?: unknown;
+            };
+          };
           console.error('Backend response data:', err.response.data);
           console.error('Backend response status:', err.response.status);
           console.error('Backend response headers:', err.response.headers);

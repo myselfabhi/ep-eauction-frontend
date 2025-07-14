@@ -37,6 +37,9 @@ export default function SupplierDashboard() {
   // Check onboarding status on mount
   useEffect(() => {
     const user = localStorage.getItem('epUser');
+    const token = localStorage.getItem('token');
+    console.log('DEBUG: epUser in localStorage:', user);
+    console.log('DEBUG: token in localStorage:', token);
     if (user) {
       setOnboardingDone(true);
     }
@@ -67,7 +70,10 @@ export default function SupplierDashboard() {
   useEffect(() => {
     const loadAuctions = async () => {
       try {
+        const token = localStorage.getItem('token');
+        console.log('DEBUG: Fetching auctions with token:', token);
         const data = await auctionService.getAll();
+        console.log('DEBUG: Auction API response:', data);
         console.log('Fetched supplier auctions:', data);
         
         // For suppliers, the backend returns { upcoming, live, ended }
