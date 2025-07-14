@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DashboardLayout from '@/components/shared/DashboardLayout';
 import InviteUserModal from '@/components/ui/modal/InviteUserModal';
+import { ROUTES } from '@/lib/routes';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -85,7 +86,7 @@ export default function SettingsPage() {
           Manage country-wise and product-wise import duties used in landed cost calculations
         </p>
         <button
-          onClick={() => router.push('/ep-member/settings/import-duty-matrix')}
+          onClick={() => router.push(ROUTES.EP_MEMBER.SETTINGS.IMPORT_DUTY_MATRIX)}
           className="border border-borderInput px-4 py-2 rounded text-sm text-body flex items-center gap-2"
         >
           <Image width={16} height={16} src="/icons/edit_pen.svg" alt="Edit" className="w-4 h-4" />
@@ -100,7 +101,7 @@ export default function SettingsPage() {
           Update exchange rates used in landed cost calculations
         </p>
         <button
-          onClick={() => router.push('/ep-member/settings/currency')}
+          onClick={() => router.push(ROUTES.EP_MEMBER.SETTINGS.CURRENCY)}
           className="border border-borderInput px-4 py-2 rounded text-sm text-body flex items-center gap-2"
         >
           <Image width={16} height={16} src="/icons/edit_pen.svg" alt="Edit" className="w-4 h-4" />

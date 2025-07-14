@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AuctionTable from '@/components/AuctionTable';
 import Loader from '@/components/shared/Loader';
 import { Auction } from '@/types/auction';
+import { ROUTES } from '@/lib/routes';
 
 const tabs = ['All', 'Live', 'Scheduled', 'Completed'] as const;
 type TabType = (typeof tabs)[number];
@@ -73,7 +74,7 @@ export default function DashboardAuctionTable({ auctions, loading }: DashboardAu
         {/* Create New Auction */}
         <div className="flex gap-2">
           <button
-            onClick={() => router.push('/ep-member/auction/create')}
+            onClick={() => router.push(ROUTES.EP_MEMBER.AUCTION.CREATE)}
             className="flex items-center gap-2 bg-[#007AFF] text-white px-4 py-2 rounded text-sm font-semibold"
           >
             <Image
@@ -94,7 +95,7 @@ export default function DashboardAuctionTable({ auctions, loading }: DashboardAu
         searchQuery={searchQuery}
         auctions={auctions}
         loading={loading}
-        onMonitorClick={(id: string) => router.push(`/ep-member/auction/${id}/monitor`)}
+        onMonitorClick={(id: string) => router.push(ROUTES.EP_MEMBER.AUCTION.MONITOR(id))}
       />
     </>
   );

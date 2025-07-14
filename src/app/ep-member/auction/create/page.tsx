@@ -11,6 +11,9 @@ import ReviewLaunchStep from '@/components/CreateAuctionSteps/ReviewLaunchStep';
 import EPHeader from '@/components/shared/EPHeader';
 import AuctionBreadcrumb from '@/components/shared/AuctionBreadcrumb';
 import Loader from '@/components/shared/Loader';
+import { auctionService, dutyService } from '@/services';
+import { ROUTES, ERROR_MESSAGES } from '@/lib';
+import { Auction } from '@/types/auction';
 
 type Product = { _id: string; name: string; hsCode?: string };
 
@@ -70,10 +73,17 @@ export default function CreateAuctionPage() {
     if (savedStep && !isNaN(Number(savedStep))) setStep(Number(savedStep));
 
     // Load import duty products for dropdown
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`)
-      .then(res => res.json())
-      .then(data => Array.isArray(data) && setImportProducts(data))
-      .catch(console.error);
+    const loadProducts = async () => {
+      try {
+        const data = await dutyService.getProducts();
+        if (Array.isArray(data)) {
+          setImportProducts(data);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      }
+    };
+    loadProducts();
   }, []);
 
   useEffect(() => {
@@ -175,61 +185,35 @@ export default function CreateAuctionPage() {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        alert('Please log in to create an auction.');
-        router.push('/auth/login');
-        return;
-      }
-      
       console.log('Sending payload:', JSON.stringify(payload, null, 2));
-      console.log('Using token:', token ? `${token.substring(0, 10)}...` : 'No token');
-      console.log('API URL:', `${process.env.NEXT_PUBLIC_API_URL}/auction/create`);
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-
-      const resText = await res.text();
-      console.log('Response status:', res.status);
-      console.log('Response text:', resText);
-      
-      let data;
-      try { 
-        data = JSON.parse(resText); 
-        console.log('Parsed response:', data);
-      } catch (e) { 
-        console.log('Failed to parse response as JSON:', e);
-        data = { message: resText }; 
-      }
+      const data = await auctionService.create(payload as unknown as Partial<Auction>);
+      console.log('Auction created:', data);
 
       setLoading(false);
-      if (res.ok || res.status === 201) {
-        alert('Auction created successfully!');
-        localStorage.removeItem('auctionStep');
-        localStorage.removeItem('auctionDraft');
-        router.push('/ep-member/dashboard');
+      alert('Auction created successfully!');
+      localStorage.removeItem('auctionStep');
+      localStorage.removeItem('auctionDraft');
+      router.push(ROUTES.EP_MEMBER.DASHBOARD);
+    } catch (error: unknown) {
+      setLoading(false);
+      console.error('API Error:', error);
+      
+      const apiError = error as { response?: { status?: number; data?: { message?: string } } };
+      
+      if (apiError?.response?.status === 401) {
+        alert(ERROR_MESSAGES.AUTH.UNAUTHORIZED);
+        router.push(ROUTES.AUTH.LOGIN);
       } else {
-        console.error('API Error:', res.status, data);
-        if (res.status === 401) {
-          alert('Authentication failed. Please log in again.');
-          router.push('/auth/login');
-        } else {
-          alert(`Auction creation failed: ${data.message || 'Unknown error'}`);
-        }
+        const message = apiError?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
+        alert(`Auction creation failed: ${message}`);
       }
-    } catch {
-      setLoading(false);
-      alert('Network error');
     }
   };
 
   const handleBack = () => {
     localStorage.removeItem('auctionStep');
-    router.push('/ep-member/dashboard');
+    router.push(ROUTES.EP_MEMBER.DASHBOARD);
   };
 
   const ConfirmLaunchModal = ({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => void; }) => {

@@ -6,9 +6,9 @@ import DashboardLayout from '@/components/shared/DashboardLayout';
 import DashboardCardSection from '@/components/EPDashboard/DashboardCardSection';
 import DashboardAuctionTable from '@/components/EPDashboard/DashboardAuctionTable';
 import Loader from '@/components/shared/Loader';
-import { fetchAuctions } from '@/services/auction.service';
+import { auctionService } from '@/services';
 import { Auction } from '@/types/auction';
-import { validateSession } from '@/lib/session';
+import { validateSession, ROUTES } from '@/lib';
 
 export default function EPDashboard() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function EPDashboard() {
         // Validate session first
         if (!validateSession()) {
           console.log('Invalid session, redirecting to login');
-          router.push('/auth/login');
+          router.push(ROUTES.AUTH.LOGIN);
           return;
         }
 
@@ -32,7 +32,7 @@ export default function EPDashboard() {
         //   console.log('Current user:', user);
         // }
         
-        const data = await fetchAuctions();
+        const data = await auctionService.getAll();
         console.log('Fetched auctions:', data);
         // Sort by createdAt descending
         const sortedAuctions = Array.isArray(data)

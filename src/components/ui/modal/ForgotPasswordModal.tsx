@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services';
+import { ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib';
 import Loader from '@/components/shared/Loader';
 
 export default function ForgotPasswordModal({
@@ -52,20 +54,12 @@ export default function ForgotPasswordModal({
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw await res.json();
+      await authService.forgotPassword(email);
       setStage('otp');
-      setSuccess('OTP sent to your email.');
-    } catch (err) {
-      const msg =
-        typeof err === 'object' && err !== null && 'message' in err
-          ? (err as { message: string }).message
-          : 'Failed to send OTP.';
+      setSuccess(SUCCESS_MESSAGES.GENERAL.SAVED);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
       setError(msg);
     } finally {
       setLoading(false);
@@ -79,20 +73,12 @@ export default function ForgotPasswordModal({
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-forgot-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-
-      if (!res.ok) throw await res.json();
+      await authService.verifyForgotOtp(email, otp);
       setStage('reset');
       setSuccess('OTP verified. Set your new password.');
-    } catch (err) {
-      const msg =
-        typeof err === 'object' && err !== null && 'message' in err
-          ? (err as { message: string }).message
-          : 'OTP verification failed.';
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
       setError(msg);
     } finally {
       setLoading(false);
@@ -102,7 +88,7 @@ export default function ForgotPasswordModal({
   const handleResetPassword = async () => {
     if (!newPassword || !retypePassword) return;
     if (newPassword !== retypePassword) {
-      setError('Passwords do not match.');
+      setError(ERROR_MESSAGES.FORM.PASSWORD_MISMATCH);
       return;
     }
 
@@ -111,23 +97,15 @@ export default function ForgotPasswordModal({
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword }),
-      });
-
-      if (!res.ok) throw await res.json();
-      setSuccess('Password reset successfully. Redirecting to login...');
+      await authService.resetPassword(email, otp, newPassword);
+      setSuccess(SUCCESS_MESSAGES.AUTH.PASSWORD_RESET);
       setTimeout(() => {
         onClose();
-        router.push('/auth/login');
+        router.push(ROUTES.AUTH.LOGIN);
       }, 1500);
-    } catch (err) {
-      const msg =
-        typeof err === 'object' && err !== null && 'message' in err
-          ? (err as { message: string }).message
-          : 'Password reset failed.';
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
       setError(msg);
     } finally {
       setLoading(false);

@@ -5,6 +5,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import DutyModal from '../../../../components/ui/modal/DutyModal';
+import { dutyService } from '@/services';
+import { ROUTES } from '@/lib/routes';
 
 
 type Country = { _id: string; name: string };
@@ -83,38 +85,40 @@ export default function ImportDutyMatrixPage() {
   const router = useRouter();
 
   // Fetch countries
-  const loadCountries = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/countries`)
-      .then(res => res.json())
-      .then(data => setCountries(Array.isArray(data) ? data : []))
-      .catch(console.error);
+  const loadCountries = async () => {
+    try {
+      const data = await dutyService.getCountries();
+      setCountries(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load countries:', error);
+    }
   };
-  useEffect(loadCountries, []);
+  useEffect(() => { loadCountries(); }, []);
 
   // Fetch products
-  const loadProducts = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`)
-      .then(res => res.json())
-      .then(data => setProducts(Array.isArray(data) ? data : []))
-      .catch(console.error);
+  const loadProducts = async () => {
+    try {
+      const data = await dutyService.getProducts();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    }
   };
-  useEffect(loadProducts, []);
+  useEffect(() => { loadProducts(); }, []);
 
   // Fetch duty matrix
-  const loadDuties = () => {
+  const loadDuties = async () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/`)
-      .then(res => res.json())
-      .then(data => {
-        setDutyRows(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(e => {
-        console.error(e);
-        setLoading(false);
-      });
+    try {
+      const data = await dutyService.getMatrix();
+      setDutyRows(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load duties:', error);
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(loadDuties, []);
+  useEffect(() => { loadDuties(); }, []);
 
   const dutyMatrix = useMemo(() => {
     const matrix: { [product: string]: { [country: string]: { rate: string, id?: string } } } = {};
@@ -148,14 +152,10 @@ export default function ImportDutyMatrixPage() {
 
   const handleSaveDuty = async (product: Product, country: Country, rate: number) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/`, {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product: product._id,
-          country: country._id,
-          dutyRate: rate,
-        }),
+      await dutyService.saveDuty({
+        product: product._id,
+        country: country._id,
+        dutyRate: rate,
       });
       handleCloseModal();
       loadDuties();
@@ -166,11 +166,7 @@ export default function ImportDutyMatrixPage() {
 
   const handleAddCountry = async () => {
     if (!newCountry.trim()) return;
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/country`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCountry.trim() }),
-    });
+    await dutyService.addCountry({ name: newCountry.trim() });
     setNewCountry('');
     setShowAddCountry(false);
     loadCountries();
@@ -178,11 +174,7 @@ export default function ImportDutyMatrixPage() {
 
   const handleAddProduct = async () => {
     if (!newProduct.trim()) return;
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/product`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newProduct.trim() }),
-    });
+    await dutyService.addProduct({ name: newProduct.trim() });
     setNewProduct('');
     setShowAddProduct(false);
     loadProducts();
@@ -196,11 +188,7 @@ export default function ImportDutyMatrixPage() {
         productId: deleteProductId ?? null,
         countryId: deleteCountryId ?? null,
       };
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/deleteProductOrCountryWithDuties`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      await dutyService.deleteProductOrCountry(body);
       setDeleteModal(false);
       setDeleteProductId(null);
       setDeleteCountryId(null);
@@ -225,7 +213,7 @@ export default function ImportDutyMatrixPage() {
         <div>
           <div
             className="flex items-center gap-2 mb-1 cursor-pointer"
-            onClick={() => router.push('/ep-member/settings')}
+            onClick={() => router.push(ROUTES.EP_MEMBER.SETTINGS.ROOT)}
           >
             <Image width={5} height={5} src="/icons/arrow_left.svg" alt="Back" className="w-4 h-4" />
             <h1 className="text-lg font-semibold text-body">Import Duty Matrix</h1>

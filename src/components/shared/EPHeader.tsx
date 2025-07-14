@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, clearSession } from '@/lib/session';
+import { ROUTES } from '@/lib/routes';
 
 export default function EPHeader() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function EPHeader() {
     setShowLogoutPopup(true);
     setTimeout(() => {
       setShowLogoutPopup(false);
-      router.push('/');
+      router.push(ROUTES.COMMON.HOME);
     }, 1500);
   };
 
@@ -34,7 +35,7 @@ export default function EPHeader() {
       {/* Logo */}
       <div
         className="text-xl font-bold cursor-pointer"
-        onClick={() => router.push('/ep-member/dashboard')}
+        onClick={() => router.push(ROUTES.EP_MEMBER.DASHBOARD)}
       >
         EP Auction
       </div>

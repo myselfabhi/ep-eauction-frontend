@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -11,7 +7,8 @@ import NotificationDropdown from '@/components/shared/NotificationDropdown';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import OnboardingModal from '@/components/ui/modal/OnboardingModal';
 import AuctionCapacityModal from '@/components/ui/modal/AuctionCapacityModal';
-import { fetchAuctions } from '@/services/auction.service';
+import { auctionService } from '@/services';
+import { ROUTES } from '@/lib';
 
 type SupplierAuction = {
   id: string;
@@ -55,14 +52,14 @@ export default function SupplierDashboard() {
       [confirmationData.auctionId]: { capacities: confirmationData.capacities, confirmed: true },
     }));
     setConfirmationData(null);
-    router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
+    router.push(ROUTES.SUPPLIER.AUCTION.LIVE(confirmationData.auctionId));
   };
 
   // Fetch auctions on component mount
   useEffect(() => {
     const loadAuctions = async () => {
       try {
-        const data = await fetchAuctions();
+        const data = await auctionService.getAll();
         console.log('Fetched supplier auctions:', data);
         
         // For suppliers, the backend returns { upcoming, live, ended }
@@ -144,7 +141,7 @@ export default function SupplierDashboard() {
               const resData = await res.json();
               console.log('Registration successful:', resData);
 
-              router.push('/auth/login');
+              router.push(ROUTES.AUTH.LOGIN);
             } catch (err) {
               console.error('Registration error:', err);
               alert('Registration failed. Please try again.');

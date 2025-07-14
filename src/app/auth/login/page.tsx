@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios, { AxiosError } from 'axios';
+import { authService } from '@/services';
+import { ROUTES, ERROR_MESSAGES } from '@/lib';
 import OtpModal from '@/components/ui/modal/OtpModal';
 import ForgotPasswordModal from '@/components/ui/modal/ForgotPasswordModal';
 import Loader from '@/components/shared/Loader';
@@ -23,19 +24,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        email,
-        password,
-      });
+      await authService.login({ email, password });
       setShowOtp(true);
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       const message = error?.response?.data?.message;
 
       setError(
         message?.toLowerCase().includes('invalid')
-          ? 'Invalid email or password.'
-          : message || 'Login failed. Please try again.'
+          ? ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS
+          : message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR
       );
     } finally {
       setLoading(false);
@@ -64,11 +62,11 @@ export default function LoginPage() {
     const epMemberRoles = ['admin', 'viewer', 'manager'];
 
     if (epMemberRoles.includes(role)) {
-      router.push('/ep-member/dashboard');
+      router.push(ROUTES.EP_MEMBER.DASHBOARD);
     } else if (role === 'supplier') {
-      router.push('/supplier/dashboard');
+      router.push(ROUTES.SUPPLIER.DASHBOARD);
     } else {
-      router.push('/unauthorized');
+      router.push(ROUTES.COMMON.UNAUTHORIZED);
     }
   };
 

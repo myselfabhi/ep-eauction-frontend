@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authService } from '@/services';
+import { ERROR_MESSAGES } from '@/lib';
 import Loader from '@/components/shared/Loader';
 
 export default function OtpModal({
@@ -19,14 +21,7 @@ export default function OtpModal({
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(30);
 
-  function isErrorWithMessage(e: unknown): e is { message: string } {
-    return (
-      typeof e === 'object' &&
-      e !== null &&
-      'message' in e &&
-      typeof (e as Record<string, unknown>).message === 'string'
-    );
-  }
+
 
   useEffect(() => {
     if (open) {
@@ -51,27 +46,23 @@ export default function OtpModal({
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
+      const data = await authService.verifyOtp(email, otp);
+
+      // Save user in localStorage
+      localStorage.setItem('epUser', JSON.stringify(data.user));
+
+      // Continue with existing flow
+      onVerified(data.token, {
+        id: data.user._id,
+        name: data.user.name,
+        role: data.user.role,
+        email: data.user.email
       });
-      if (!res.ok) throw await res.json();
-const data = await res.json();
-
-// Save user in localStorage
-localStorage.setItem('epUser', JSON.stringify(data.user));
-
-// Continue with existing flow
-onVerified(data.token, data.user);
-onClose();
-
-    } catch (err) {
-      if (isErrorWithMessage(err)) {
-        setError(err.message);
-      } else {
-        setError('Verification failed');
-      }
+      onClose();
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const message = error?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/shared/DashboardLayout";
 import Image from "next/image";
 import { CurrencyRateModal } from "@/components/ui/modal/CurrencyRateModal";
 import { Button } from "@/components/ui/button";
+import { currencyService } from "@/services";
+import { ROUTES } from "@/lib/routes";
 
 
 // ---- Currency type definition ----
@@ -30,10 +32,13 @@ export default function WeeklyCurrencyRatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Currency | null>(null);
 
   // Fetch currencies from backend
-  const fetchCurrencies = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/currency-rate`)
-      .then((res) => res.json())
-      .then((data: Currency[]) => setCurrencies(data));
+  const fetchCurrencies = async () => {
+    try {
+      const data = await currencyService.getRates();
+      setCurrencies(data as Currency[]);
+    } catch (error) {
+      console.error('Failed to fetch currencies:', error);
+    }
   };
 
   useEffect(() => {
@@ -65,11 +70,7 @@ export default function WeeklyCurrencyRatesPage() {
 
   // Save handler (add or edit)
   const handleSave = async (data: { currency: string; code: string; rate: number }) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/currency-rate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    await currencyService.updateRate(data);
     setModalOpen(false);
     fetchCurrencies();
   };
@@ -94,7 +95,7 @@ export default function WeeklyCurrencyRatesPage() {
         <div>
           <div
             className="flex items-center gap-2 mb-1 cursor-pointer"
-            onClick={() => router.push("/ep-member/settings")}
+            onClick={() => router.push(ROUTES.EP_MEMBER.SETTINGS.ROOT)}
           >
             <Image width={16} height={16} src="/icons/arrow_left.svg" alt="Back" className="w-4 h-4" />
             <h1 className="text-lg font-semibold text-body">Weekly Currency Rates</h1>

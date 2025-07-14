@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Auction } from '@/types/auction';
 import EditableReviewModal from './ui/modal/EditableReviewModal';
+import { auctionService } from '@/services';
+import { ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib';
 
 function getRemainingTime(endTime: string): string {
   const end = new Date(endTime).getTime();
@@ -249,7 +251,7 @@ export default function AuctionTable({
                         <button
                           onClick={() => {
                             setOpenAction(null);
-                            router.push('/dummy/download-report');
+                            router.push(ROUTES.COMMON.HOME);
                           }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
                         >
@@ -283,26 +285,14 @@ export default function AuctionTable({
           onSave={async (updatedData) => {
             console.log('[Modal] Saving updated auction:', updatedData);
             try {
-              const token = localStorage.getItem('token');
-              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/update/${editAuction._id}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(updatedData),
-              });
-
-              if (res.ok) {
-                alert('Auction updated successfully!');
-                setEditModalOpen(false);
-                console.log('[Modal] Saved and closed');
-              } else {
-                const err = await res.json();
-                alert(err.message || 'Update failed');
-              }
-            } catch {
-              alert('Network error');
+              await auctionService.update(editAuction._id, updatedData as unknown as Partial<Auction>);
+              alert(SUCCESS_MESSAGES.AUCTION.UPDATED);
+              setEditModalOpen(false);
+              console.log('[Modal] Saved and closed');
+            } catch (error: unknown) {
+              const apiError = error as { response?: { data?: { message?: string } } };
+              const message = apiError?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
+              alert(message);
             }
           }}
         />

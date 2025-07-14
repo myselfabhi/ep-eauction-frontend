@@ -311,7 +311,8 @@ export default function EPMonitorAuctionPage() {
         const endTime = new Date(auctionData.endTime).getTime();
         setTimeRemaining(Math.max(0, Math.floor((endTime - now) / 1000)));
         setIsPaused(auctionData.status === 'Paused');
-        setMonitoringData(await fetchAuctionMonitoring(id as string));
+        const monitoringData = await fetchAuctionMonitoring(id as string);
+        setMonitoringData(monitoringData as Record<string, unknown>);
         // setRankedBids(await fetchAuctionRanking(id as string));
       } catch {
         setError('Failed to load auction data');
@@ -330,7 +331,8 @@ export default function EPMonitorAuctionPage() {
     socket.on('newBid', async () => {
       if (isPaused) return;
       // await fetchAuctionRanking(id as string).then(setRankedBids);
-      await fetchAuctionMonitoring(id as string).then(setMonitoringData);
+      const monitoringData = await fetchAuctionMonitoring(id as string);
+      setMonitoringData(monitoringData as Record<string, unknown>);
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);

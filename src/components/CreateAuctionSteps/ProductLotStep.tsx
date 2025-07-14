@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dutyService } from "@/services";
 
 type ProductLotData = {
   lotId?: string;
@@ -51,16 +52,9 @@ export default function ProductLotStep({
 
     try {
       setSaving(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/product`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: customProductName.trim() }),
-      });
-
-      if (!res.ok) throw new Error();
-
-      const updatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/import-duty/products`);
-      const updatedData = await updatedRes.json();
+      await dutyService.addProduct({ name: customProductName.trim() });
+      
+      const updatedData = await dutyService.getProducts();
       if (Array.isArray(updatedData)) {
         setImportProducts(updatedData);
       }
