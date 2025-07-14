@@ -6,6 +6,7 @@ type ProductLotData = {
   hsCode?: string;
   productName?: string;
   material?: string;
+  volume?: string;
   prevCost?: string;
   dimensions?: { l?: string; w?: string; h?: string };
   lotCount?: number | string;
@@ -147,8 +148,25 @@ export default function ProductLotStep({
             />
           </div>
 
+          {/* Volume */}
+          <div>
+            <label className="block text-sm mb-1">Volume</label>
+            <input
+              type="text"
+              placeholder="Volume"
+              className={`w-full bg-white border px-3 py-2 rounded text-sm ${
+                showErrors && !data.volume ? "border-red-500" : "border-[#DDE1EB]"
+              }`}
+              value={data.volume || ""}
+              onChange={(e) => onChange({ volume: e.target.value })}
+            />
+            {showErrors && !data.volume && (
+              <span className="text-xs text-red-500">Required</span>
+            )}
+          </div>
+
           {/* Previous Cost */}
-          <div className="col-span-2">
+          <div>
             <label className="block text-sm mb-1">Previous Landed Cost</label>
             <input
               type="text"

@@ -7,6 +7,7 @@ type Lot = {
   hsCode?: string;
   productName?: string;
   material?: string;
+  volume?: string;
   dimensions?: {
     l?: string;
     w?: string;
@@ -114,6 +115,7 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
                 <th className="px-4 py-2 border-b font-medium">HS Code</th>
                 <th className="px-4 py-2 border-b font-medium">Product Name</th>
                 <th className="px-4 py-2 border-b font-medium">Material / Dimensions</th>
+                <th className="px-4 py-2 border-b font-medium">Volume</th>
                 <th className="px-4 py-2 border-b font-medium">Previous Cost</th>
                 <th className="px-4 py-2 border-b font-medium">LOT Count</th>
               </tr>
@@ -129,6 +131,7 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
                     {lot.material && lot.dimensions ? ", " : ""}
                     {formatDimensions(lot.dimensions)}
                   </td>
+                  <td className="px-4 py-2 border-b">{lot.volume || "-"}</td>
                   <td className="px-4 py-2 border-b">{lot.prevCost || "-"}</td>
                   <td className="px-4 py-2 border-b">{lot.lotCount ?? "-"}</td>
                 </tr>

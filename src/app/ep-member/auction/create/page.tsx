@@ -22,6 +22,7 @@ type LotData = {
   hsCode?: string;
   productName?: string;
   material?: string;
+  volume?: string;
   dimensions?: { l?: string; w?: string; h?: string };
   prevCost?: string;
   lotCount?: number | string;
@@ -113,7 +114,7 @@ export default function CreateAuctionPage() {
   const isStepValid = () => {
     if (step === 1) {
       const lots = auctionData.lots || [];
-      return lots.length > 0 && lots.every(lot => lot.productName?.trim());
+      return lots.length > 0 && lots.every(lot => lot.productName?.trim() && lot.volume?.trim());
     }
     const required = requiredFieldsPerStep[step] || [];
     return required.every(field => {
@@ -177,6 +178,7 @@ export default function CreateAuctionPage() {
         productName: lot.productName || 'Product',
         hsCode: lot.hsCode && lot.hsCode.trim() !== '' ? lot.hsCode : '123', // Default to '123' if missing/null/empty
         material: lot.material || 'Material',
+        volume: lot.volume || '0',
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
         dimensions: lot.dimensions ? 
           `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` : 

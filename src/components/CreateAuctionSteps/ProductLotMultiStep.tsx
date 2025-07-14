@@ -5,6 +5,7 @@ type ProductLotData = {
   hsCode?: string;
   productName?: string;
   material?: string;
+  volume?: string;
   prevCost?: string;
   dimensions?: { l?: string; w?: string; h?: string };
   lotCount?: number | string;
