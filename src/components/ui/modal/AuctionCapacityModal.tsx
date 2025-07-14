@@ -3,8 +3,12 @@
 import { useState, useEffect } from 'react';
 
 type Lot = {
-  id: string;
-  label: string;
+  _id: string;
+  lotId: string;
+  name: string;
+  material?: string;
+  volume?: string;
+  dimensions?: { l?: string; w?: string; h?: string };
 };
 
 export default function AuctionCapacityModal({
@@ -35,6 +39,22 @@ export default function AuctionCapacityModal({
     setCapacities(initialCapacities);
   }, [initialCapacities]);
 
+  // Debug logging
+  useEffect(() => {
+    if (open) {
+      console.log('DEBUG: AuctionCapacityModal opened');
+      console.log('DEBUG: Modal props:', {
+        auctionTitle,
+        auctionTime,
+        lotsCount: lots.length,
+        lots,
+        initialCapacities,
+        isReadOnly,
+        isLiveAuction
+      });
+    }
+  }, [open, auctionTitle, auctionTime, lots, initialCapacities, isReadOnly, isLiveAuction]);
+
   const handleChange = (lotId: string, value: string) => {
     setCapacities((prev) => ({ ...prev, [lotId]: value }));
   };
@@ -42,14 +62,16 @@ export default function AuctionCapacityModal({
   const canSubmit =
     !isReadOnly &&
     agreed &&
-    lots.every((lot) => capacities[lot.id] && capacities[lot.id].trim() !== '');
+    lots.every((lot) => capacities[lot.lotId] && capacities[lot.lotId].trim() !== '');
 
   if (!open) return null;
 
-  // De-duplicate lots by ID
+  // De-duplicate lots by lotId
   const uniqueLots = Array.from(
-    new Map(lots.map((lot) => [lot.id, lot])).values()
+    new Map(lots.map((lot) => [lot.lotId, lot])).values()
   );
+
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center px-4">
@@ -67,11 +89,14 @@ export default function AuctionCapacityModal({
         >
           <div className="space-y-6 mb-6">
             {uniqueLots.map((lot) => (
-              <div key={lot.id} className="border-b border-gray-200 pb-4">
+              <div key={lot.lotId} className="border-b border-gray-200 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-gray-700 mb-0.5">{lot.id}</p>
-                    <p className="text-sm text-gray-600">{lot.label}</p>
+                    <p className="text-xs font-semibold text-gray-700 mb-0.5">{lot.lotId}</p>
+                    <p className="text-sm text-gray-600 mb-1">{lot.name}</p>
+                    {lot.volume && (
+                      <p className="text-xs text-gray-500 mb-1">Volume: {lot.volume}</p>
+                    )}
                   </div>
                   <div className="w-36">
                     <input
@@ -79,8 +104,8 @@ export default function AuctionCapacityModal({
                       inputMode="numeric"
                       readOnly={isReadOnly}
                       placeholder="Carton/container"
-                      value={capacities[lot.id] || ''}
-                      onChange={(e) => handleChange(lot.id, e.target.value)}
+                      value={capacities[lot.lotId] || ''}
+                      onChange={(e) => handleChange(lot.lotId, e.target.value)}
                       className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none ${
                         isReadOnly
                           ? 'bg-gray-100 text-gray-500 border-gray-200'

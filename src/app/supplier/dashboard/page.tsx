@@ -10,19 +10,33 @@ import AuctionCapacityModal from '@/components/ui/modal/AuctionCapacityModal';
 import { auctionService } from '@/services';
 import { ROUTES } from '@/lib';
 
+type LotData = {
+  _id: string;
+  lotId: string;
+  name: string;
+  material?: string;
+  volume?: string;
+  dimensions?: { l?: string; w?: string; h?: string };
+};
+
+type BackendLot = {
+  _id: string;
+  lotId: string;
+  name: string;
+  material?: string;
+  volume?: string;
+  dimensions?: { l?: string; w?: string; h?: string };
+  [key: string]: unknown;
+};
+
 type SupplierAuction = {
   id: string;
   status: 'live' | 'upcoming' | 'closed';
   title: string;
   startTime: string;
   eligibleLots: number;
+  lots?: LotData[];
 };
-
-const lotsList = [
-  { id: 'LOT-001', label: 'Kraft Boxes - Standard Size' },
-  { id: 'LOT-002', label: 'Corrugated Shipping Boxes' },
-  { id: 'LOT-003', label: 'Premium Packaging Boxes' },
-];
 
 export default function SupplierDashboard() {
   const router = useRouter();
@@ -73,43 +87,116 @@ export default function SupplierDashboard() {
         const token = localStorage.getItem('token');
         console.log('DEBUG: Fetching auctions with token:', token);
         const data = await auctionService.getAll();
-        console.log('DEBUG: Auction API response:', data);
-        console.log('Fetched supplier auctions:', data);
+        console.log('DEBUG: Raw auction API response:', data);
+        console.log('DEBUG: Data type:', typeof data);
+        console.log('DEBUG: Data keys:', Object.keys(data || {}));
+        
+        // Additional debugging for the specific auction structure
+        if (data && typeof data === 'object') {
+          console.log('DEBUG: Full data structure:', JSON.stringify(data, null, 2));
+        }
         
         // For suppliers, the backend returns { upcoming, live, ended }
         // We need to combine them into a single array for the UI
         if (data && typeof data === 'object' && 'upcoming' in data) {
           const supplierData = data as { upcoming?: unknown[]; live?: unknown[]; ended?: unknown[] };
+          console.log('DEBUG: Supplier data structure:', {
+            upcoming: supplierData.upcoming?.length || 0,
+            live: supplierData.live?.length || 0,
+            ended: supplierData.ended?.length || 0
+          });
+          
           const allAuctions = [
             ...(supplierData.upcoming || []),
             ...(supplierData.live || []),
             ...(supplierData.ended || [])
           ];
+          
+          console.log('DEBUG: Combined auctions count:', allAuctions.length);
+          console.log('DEBUG: First auction sample:', allAuctions[0]);
+          
           // Transform backend auction format to supplier auction format
-          const transformedAuctions: SupplierAuction[] = allAuctions.map((auction) => {
+          const transformedAuctions: SupplierAuction[] = allAuctions.map((auction, index) => {
             const auctionData = auction as Record<string, unknown>;
-            return {
+            console.log(`DEBUG: Processing auction ${index}:`, {
+              id: auctionData._id || auctionData.id,
+              title: auctionData.title,
+              lots: auctionData.lots,
+              lotsType: typeof auctionData.lots,
+              lotsLength: Array.isArray(auctionData.lots) ? auctionData.lots.length : 'not array'
+            });
+            
+            // Handle lots data properly
+            let lotsArray: LotData[] = [];
+            if (auctionData.lots && Array.isArray(auctionData.lots)) {
+              lotsArray = (auctionData.lots as unknown[]).map((lot: unknown, lotIndex: number) => {
+                const lotData = lot as BackendLot;
+                console.log(`DEBUG: Processing lot ${lotIndex}:`, lotData);
+                return {
+                  _id: lotData._id,
+                  lotId: lotData.lotId,
+                  name: lotData.name,
+                  material: lotData.material,
+                  volume: lotData.volume || '', // Handle missing volume field
+                  dimensions: lotData.dimensions,
+                };
+              });
+            }
+            
+            const transformedAuction = {
               id: (auctionData._id || auctionData.id) as string,
-              status: auctionData.status === 'Active' ? 'live' : auctionData.status === 'Scheduled' ? 'upcoming' : 'closed',
+              status: (auctionData.status === 'Active' ? 'live' : auctionData.status === 'Scheduled' ? 'upcoming' : 'closed') as 'live' | 'upcoming' | 'closed',
               title: auctionData.title as string,
               startTime: auctionData.startTime as string,
-              eligibleLots: auctionData.lots ? (auctionData.lots as unknown[]).length : 0
+              eligibleLots: lotsArray.length,
+              lots: lotsArray
             };
+            
+            console.log(`DEBUG: Transformed auction ${index}:`, transformedAuction);
+            return transformedAuction;
           });
+          
+          console.log('DEBUG: Final transformed auctions:', transformedAuctions);
           setAuctions(transformedAuctions);
         } else {
           // Fallback for EP members or if data structure is different
+          console.log('DEBUG: Using fallback data processing');
           const arrayData = Array.isArray(data) ? data : [];
-          const transformedAuctions: SupplierAuction[] = arrayData.map((auction) => {
+          const transformedAuctions: SupplierAuction[] = arrayData.map((auction, index) => {
             const auctionData = auction as unknown as Record<string, unknown>;
-            return {
+            console.log(`DEBUG: Fallback processing auction ${index}:`, auctionData);
+            
+            // Handle lots data properly for fallback
+            let lotsArray: LotData[] = [];
+            if (auctionData.lots && Array.isArray(auctionData.lots)) {
+              lotsArray = (auctionData.lots as unknown[]).map((lot: unknown, lotIndex: number) => {
+                const lotData = lot as BackendLot;
+                console.log(`DEBUG: Fallback processing lot ${lotIndex}:`, lotData);
+                return {
+                  _id: lotData._id,
+                  lotId: lotData.lotId,
+                  name: lotData.name,
+                  material: lotData.material,
+                  volume: lotData.volume || '', // Handle missing volume field
+                  dimensions: lotData.dimensions,
+                };
+              });
+            }
+            
+            const transformedAuction = {
               id: (auctionData._id || auctionData.id) as string,
-              status: auctionData.status === 'Active' ? 'live' : auctionData.status === 'Scheduled' ? 'upcoming' : 'closed',
+              status: (auctionData.status === 'Active' ? 'live' : auctionData.status === 'Scheduled' ? 'upcoming' : 'closed') as 'live' | 'upcoming' | 'closed',
               title: auctionData.title as string,
               startTime: auctionData.startTime as string,
-              eligibleLots: auctionData.lots ? (auctionData.lots as unknown[]).length : 0
+              eligibleLots: lotsArray.length,
+              lots: lotsArray
             };
+            
+            console.log(`DEBUG: Fallback transformed auction ${index}:`, transformedAuction);
+            return transformedAuction;
           });
+          
+          console.log('DEBUG: Final fallback transformed auctions:', transformedAuctions);
           setAuctions(transformedAuctions);
         }
       } catch (err) {
@@ -172,11 +259,17 @@ export default function SupplierDashboard() {
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-8 py-6 w-full max-w-md">
             <h2 className="text-lg font-semibold text-gray-800 text-center mb-3">Confirm Auction Details</h2>
             <div className="space-y-3 mb-5">
-              {Object.entries(confirmationData.capacities).map(([lotId, value]) => (
-                <div key={lotId} className="text-sm text-gray-700">
-                  <strong>{lotId}:</strong> {value} cartons
-                </div>
-              ))}
+              {Object.entries(confirmationData.capacities).map(([lotId, value]) => {
+                const auction = auctions.find(a => a.id === confirmationData.auctionId);
+                const lot = auction?.lots?.find(l => l.lotId === lotId);
+                return (
+                  <div key={lotId} className="text-sm text-gray-700 border-b border-gray-100 pb-2">
+                    <div className="font-semibold">{lotId}</div>
+                    <div className="text-gray-600">{lot?.name || 'Lot Details'}</div>
+                    <div className="text-gray-500">{value} cartons</div>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex justify-end gap-3">
               <button
@@ -296,24 +389,27 @@ export default function SupplierDashboard() {
                             )
                           )}
                         </div>
-
-                        :
-
-tsx
-Copy
-Edit
 {capacityModalOpen && capacityModalOpen.auctionId === auction.id && (
-  <AuctionCapacityModal
-    open={true}
-    auctionTitle={auction.title}
-    auctionTime={auction.startTime}
-    lots={lotsList}
-    initialCapacities={details?.capacities || {}}
-    isReadOnly={capacityModalOpen.readOnly}
-    isLiveAuction={isLive}
-    onClose={() => setCapacityModalOpen(null)}
-    onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
-  />
+  (() => {
+    console.log('DEBUG: Modal data for auction:', auction.id);
+    console.log('DEBUG: Auction title:', auction.title);
+    console.log('DEBUG: Auction lots:', auction.lots);
+    console.log('DEBUG: Lots length:', auction.lots?.length || 0);
+    console.log('DEBUG: First lot sample:', auction.lots?.[0]);
+    return (
+      <AuctionCapacityModal
+        open={true}
+        auctionTitle={auction.title}
+        auctionTime={auction.startTime}
+        lots={auction.lots || []}
+        initialCapacities={details?.capacities || {}}
+        isReadOnly={capacityModalOpen.readOnly}
+        isLiveAuction={isLive}
+        onClose={() => setCapacityModalOpen(null)}
+        onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
+      />
+    );
+  })()
 )}
                       </div>
                     );
