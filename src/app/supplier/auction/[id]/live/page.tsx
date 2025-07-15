@@ -84,6 +84,11 @@ export default function SupplierAuctionLivePage() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
 
+  // New: Track bid input state
+  const [bidInput, setBidInput] = useState<{ [lotId: string]: string }>({});
+  const [placingBid, setPlacingBid] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Fetch auction data on component mount
   useEffect(() => {
     const fetchAuctionData = async () => {
@@ -194,6 +199,48 @@ export default function SupplierAuctionLivePage() {
   };
   const handleConfirm = () => {
     setModalOpen(false);
+  };
+
+  // Place bid handler
+  const handlePlaceBid = async (lot: Auction['lots'][0]) => {
+    if (!auctionData) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        auctionId: auctionData._id,
+        lotId: lot._id,
+        amount: Number(bidInput[lot._id]),
+        currency: auctionData.currency,
+        fobCost: 0,
+        tax: 0,
+        duty: 0,
+        performanceScore: 0,
+      };
+      const response = await (await import('@/services')).bidService.create(payload);
+      // Add to active bids table (top)
+      setActiveBids(prev => [
+        {
+          id: lot.lotId || lot._id,
+          product: lot.name,
+          quantity: lot.volume || '',
+          bidders: 1,
+          lastUpdate: 'now',
+          rank: prev.length + 1,
+          yourBid: `$${payload.amount}`,
+          updateBid: `$${payload.amount}`,
+          status: 'success',
+          confirmed: true,
+        },
+        ...prev,
+      ]);
+      setBidInput(prev => ({ ...prev, [lot._id]: '' }));
+      setPlacingBid(null);
+    } catch (err) {
+      alert('Failed to place bid.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   function ProductSpecsRow({ lot }: { lot: Auction['lots'][0] }) {
@@ -359,16 +406,41 @@ export default function SupplierAuctionLivePage() {
                         <td className={tdBase}>--</td>
                         <td className={tdBase}>--</td>
                         <td className={tdBase}>
-                          <button
-                            className="text-blue-600 underline font-medium px-1 py-1"
-                            style={{ fontSize: 15, letterSpacing: '-0.5px' }}
-                            onClick={() => {
-                              // Handle bid placement
-                              console.log('DEBUG: Placing bid for lot:', realLot);
-                            }}
-                          >
-                            Place bid
-                          </button>
+                          {placingBid === realLot._id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
+                                value={bidInput[realLot._id] || ''}
+                                onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
+                                min={0}
+                                disabled={isSubmitting}
+                              />
+                              <button
+                                className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
+                                title="Confirm"
+                                disabled={isSubmitting || !bidInput[realLot._id]}
+                                onClick={() => handlePlaceBid(realLot)}
+                              >
+                                ✓
+                              </button>
+                              <button
+                                className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
+                                onClick={() => setPlacingBid(null)}
+                                disabled={isSubmitting}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="text-blue-600 underline font-medium px-1 py-1"
+                              style={{ fontSize: 15, letterSpacing: '-0.5px' }}
+                              onClick={() => setPlacingBid(realLot._id)}
+                            >
+                              Place bid
+                            </button>
+                          )}
                         </td>
                       </tr>
                       {expandLot === `${realLot.lotId}_${idx}` && (
