@@ -6,6 +6,8 @@ import SupplierLayout from '@/components/shared/SupplierLayout';
 import ConfirmBidModal from '@/components/ui/modal/ConfirmBidModal';
 import { auctionService } from '@/services';
 import { Auction } from '@/types/auction';
+import { bidService } from '@/services';
+import { Bid } from '@/types/bid';
 
 const initialActiveBids = [
   {
@@ -79,7 +81,9 @@ export default function SupplierAuctionLivePage() {
   
   const [expandLot, setExpandLot] = useState<string | null>('LOT-CC-001_0');
   const [showLots, setShowLots] = useState(true);
-  const [activeBids, setActiveBids] = useState(initialActiveBids);
+  const [activeBids, setActiveBids] = useState<Bid[]>([]);
+  const [editBid, setEditBid] = useState<string | null>(null); // bid._id being edited
+  const [editBidValue, setEditBidValue] = useState<string>('');
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -137,6 +141,22 @@ export default function SupplierAuctionLivePage() {
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [auctionData?.endTime]);
+
+  // Fetch active bids ranking for this auction
+  const fetchRanking = async () => {
+    if (!auctionId) return;
+    try {
+      const ranking = await bidService.getRanking(auctionId);
+      setActiveBids(ranking);
+    } catch (err) {
+      console.error('Failed to fetch bid ranking:', err);
+    }
+  };
+
+  // Fetch ranking on mount and after each bid
+  useEffect(() => {
+    fetchRanking();
+  }, [auctionId]);
 
   // Auction Header (matches your screenshot)
   function AuctionHeader() {
@@ -216,27 +236,37 @@ export default function SupplierAuctionLivePage() {
         duty: 0,
         performanceScore: 0,
       };
-      const response = await (await import('@/services')).bidService.create(payload);
-      // Add to active bids table (top)
-      setActiveBids(prev => [
-        {
-          id: lot.lotId || lot._id,
-          product: lot.name,
-          quantity: lot.volume || '',
-          bidders: 1,
-          lastUpdate: 'now',
-          rank: prev.length + 1,
-          yourBid: `$${payload.amount}`,
-          updateBid: `$${payload.amount}`,
-          status: 'success',
-          confirmed: true,
-        },
-        ...prev,
-      ]);
+      const response = await bidService.create(payload);
+      // Add the new bid to the table and fetch latest ranking
+      await fetchRanking();
       setBidInput(prev => ({ ...prev, [lot._id]: '' }));
       setPlacingBid(null);
     } catch (err) {
       alert('Failed to place bid.');
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Update bid handler
+  const handleUpdateBid = async (bid: Bid) => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        amount: Number(editBidValue),
+        currency: bid.currency,
+        fobCost: bid.fobCost,
+        tax: bid.tax,
+        duty: bid.duty,
+        performanceScore: bid.performanceScore,
+      };
+      await bidService.update(bid._id, payload);
+      await fetchRanking();
+      setEditBid(null);
+      setEditBidValue('');
+    } catch (err) {
+      alert('Failed to update bid.');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -284,6 +314,9 @@ export default function SupplierAuctionLivePage() {
     );
   }
 
+  // Compute available lots (lots without an active bid by this supplier)
+  const availableLots = auctionData?.lots?.filter(lot => !activeBids.some(bid => bid.lot === lot._id)) || [];
+
   return (
     <SupplierLayout>
       <div className="pt-8 pb-2 px-4 min-h-screen bg-[#fafbfc]">
@@ -309,52 +342,62 @@ export default function SupplierAuctionLivePage() {
               </thead>
               <tbody>
                 {activeBids.map((bid, idx) => (
-                  <React.Fragment key={idx}>
-                    <tr className={`border-b border-[#f1f1f1] ${bid.status === 'success' ? 'bg-[#f2faee]' : ''}`}>
+                  <React.Fragment key={bid._id}>
+                    <tr className={`border-b border-[#f1f1f1] ${bid.status === 'Active' ? '' : 'bg-gray-100'}`}>
                       <td className={tdBase + ' font-semibold'}>
-                        <span className={`inline-block w-4 h-4 rounded-full mr-1 align-middle ${bid.status === 'success' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        {bid.id}
+                        <span className={`inline-block w-4 h-4 rounded-full mr-1 align-middle ${bid.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                        {auctionData?.lots.find(l => l._id === bid.lot)?.lotId || bid.lot}
                       </td>
-                      <td className={tdBase}>{bid.product}</td>
-                      <td className={tdBase}>{bid.quantity}</td>
-                      <td className={tdBase}>{bid.lastUpdate}</td>
-                      <td className={tdBase + ' ' + tdRank} style={bid.status === 'success'
-                        ? { color: '#2b9500' }
-                        : { color: '#e53935' }
-                      }>
-                        {bid.rank === 1 ? `#${bid.rank}` : `#${bid.rank}`}
+                      <td className={tdBase}>{auctionData?.lots.find(l => l._id === bid.lot)?.name || ''}</td>
+                      <td className={tdBase}>{auctionData?.lots.find(l => l._id === bid.lot)?.volume || ''}</td>
+                      <td className={tdBase}>{new Date(bid.updatedAt).toLocaleString()}</td>
+                      <td className={tdBase + ' ' + tdRank} style={{ color: idx === 0 ? '#2b9500' : '#e53935' }}>
+                        #{idx + 1}
                       </td>
-                      <td className={tdBase + ' font-bold'}>{bid.yourBid}</td>
+                      <td className={tdBase + ' font-bold'}>${bid.amount}</td>
                       <td className={tdBase}>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={bid.updateBid}
-                            onChange={e => {
-                              setActiveBids(prev =>
-                                prev.map((b, i) => i === idx ? { ...b, updateBid: e.target.value } : b)
-                              );
-                            }}
-                            className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
-                            readOnly={bid.confirmed}
-                            style={{
-                              background: bid.confirmed ? '#f0f1f4' : '#fff',
-                              borderColor: '#e4e4e7',
-                            }}
-                          />
-                          {bid.confirmed ? (
-                            <span className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold">
-                              ✓
-                            </span>
-                          ) : (
+                        {editBid === bid._id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
+                              value={editBidValue}
+                              onChange={e => setEditBidValue(e.target.value)}
+                              min={0}
+                              disabled={isSubmitting}
+                            />
                             <button
-                              className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold hover:bg-green-100"
+                              className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
                               title="Confirm"
+                              disabled={isSubmitting || !editBidValue}
+                              onClick={() => handleUpdateBid(bid)}
                             >
                               ✓
                             </button>
-                          )}
-                        </div>
+                            <button
+                              className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
+                              onClick={() => setEditBid(null)}
+                              disabled={isSubmitting}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span>${bid.amount}</span>
+                            <button
+                              className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-blue-50 border border-blue-500 text-blue-600 text-lg font-semibold transition hover:bg-blue-100"
+                              title="Edit"
+                              onClick={() => {
+                                setEditBid(bid._id);
+                                setEditBidValue(bid.amount.toString());
+                              }}
+                              disabled={isSubmitting}
+                            >
+                              ✎
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   </React.Fragment>
@@ -367,7 +410,7 @@ export default function SupplierAuctionLivePage() {
           <div className="bg-white rounded-2xl border border-[#ececec] shadow">
             <div className="flex items-center px-6 pt-4 font-semibold text-[15px] text-[#232323]">
               <span>AVAILABLE LOTS</span>
-              <span className="ml-1 text-gray-400">{auctionData?.lots?.length || 0}</span>
+              <span className="ml-1 text-gray-400">{availableLots.length}</span>
               <span className="ml-5 text-[13px] text-gray-500 cursor-pointer select-none"
                 onClick={() => setShowLots((prev) => !prev)}
               >
@@ -375,81 +418,85 @@ export default function SupplierAuctionLivePage() {
               </span>
             </div>
             {showLots && (
-              <table className="w-full border-separate border-spacing-0 text-[15px]">
-                <thead>
-                  <tr className="text-[#7b7b7b] font-semibold bg-[#f7f8fa] border-b border-[#f0f0f0]">
-                    <th className="text-left py-2 px-6 rounded-tl-xl">LOT ID</th>
-                    <th className="text-left py-2">Product</th>
-                    <th className="text-left py-2">Quantity</th>
-                    <th className="text-left py-2">Active bidders</th>
-                    <th className="text-left py-2">Last update</th>
-                    <th className="text-left py-2">Rank</th>
-                    <th className="text-left py-2 rounded-tr-xl">Your Bid</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auctionData?.lots?.map((realLot, idx: number) => (
-                    <React.Fragment key={idx}>
-                      <tr className="border-b border-[#f1f1f1] hover:bg-[#fafbfc] group transition">
-                        <td className={tdBase + ' font-semibold text-black'}>
-                          <button
-                            className="focus:outline-none"
-                            onClick={() => setExpandLot(expandLot === `${realLot.lotId}_${idx}` ? null : `${realLot.lotId}_${idx}`)}
-                          >
-                            {expandLot === `${realLot.lotId}_${idx}` ? '▾' : '▸'}
-                          </button>{' '}
-                          {realLot.lotId}
-                        </td>
-                        <td className={tdBase}>{realLot.name}</td>
-                        <td className={tdBase}>{realLot.volume || 'N/A'}</td>
-                        <td className={tdBase}>--</td>
-                        <td className={tdBase}>--</td>
-                        <td className={tdBase}>--</td>
-                        <td className={tdBase}>
-                          {placingBid === realLot._id ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
-                                value={bidInput[realLot._id] || ''}
-                                onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
-                                min={0}
-                                disabled={isSubmitting}
-                              />
-                              <button
-                                className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
-                                title="Confirm"
-                                disabled={isSubmitting || !bidInput[realLot._id]}
-                                onClick={() => handlePlaceBid(realLot)}
-                              >
-                                ✓
-                              </button>
-                              <button
-                                className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
-                                onClick={() => setPlacingBid(null)}
-                                disabled={isSubmitting}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ) : (
+              availableLots.length === 0 ? (
+                <div className="px-6 py-8 text-center text-gray-500 text-[15px]">No available lots to bid on.</div>
+              ) : (
+                <table className="w-full border-separate border-spacing-0 text-[15px]">
+                  <thead>
+                    <tr className="text-[#7b7b7b] font-semibold bg-[#f7f8fa] border-b border-[#f0f0f0]">
+                      <th className="text-left py-2 px-6 rounded-tl-xl">LOT ID</th>
+                      <th className="text-left py-2">Product</th>
+                      <th className="text-left py-2">Quantity</th>
+                      <th className="text-left py-2">Active bidders</th>
+                      <th className="text-left py-2">Last update</th>
+                      <th className="text-left py-2">Rank</th>
+                      <th className="text-left py-2 rounded-tr-xl">Your Bid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availableLots.map((realLot, idx: number) => (
+                      <React.Fragment key={idx}>
+                        <tr className="border-b border-[#f1f1f1] hover:bg-[#fafbfc] group transition">
+                          <td className={tdBase + ' font-semibold text-black'}>
                             <button
-                              className="text-blue-600 underline font-medium px-1 py-1"
-                              style={{ fontSize: 15, letterSpacing: '-0.5px' }}
-                              onClick={() => setPlacingBid(realLot._id)}
+                              className="focus:outline-none"
+                              onClick={() => setExpandLot(expandLot === `${realLot.lotId}_${idx}` ? null : `${realLot.lotId}_${idx}`)}
                             >
-                              Place bid
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                      {expandLot === `${realLot.lotId}_${idx}` && (
-                        <ProductSpecsRow lot={realLot} />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                              {expandLot === `${realLot.lotId}_${idx}` ? '▾' : '▸'}
+                            </button>{' '}
+                            {realLot.lotId}
+                          </td>
+                          <td className={tdBase}>{realLot.name}</td>
+                          <td className={tdBase}>{realLot.volume || 'N/A'}</td>
+                          <td className={tdBase}>--</td>
+                          <td className={tdBase}>--</td>
+                          <td className={tdBase}>--</td>
+                          <td className={tdBase}>
+                            {placingBid === realLot._id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
+                                  value={bidInput[realLot._id] || ''}
+                                  onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
+                                  min={0}
+                                  disabled={isSubmitting}
+                                />
+                                <button
+                                  className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
+                                  title="Confirm"
+                                  disabled={isSubmitting || !bidInput[realLot._id]}
+                                  onClick={() => handlePlaceBid(realLot)}
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
+                                  onClick={() => setPlacingBid(null)}
+                                  disabled={isSubmitting}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                className="text-blue-600 underline font-medium px-1 py-1"
+                                style={{ fontSize: 15, letterSpacing: '-0.5px' }}
+                                onClick={() => setPlacingBid(realLot._id)}
+                              >
+                                Place bid
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {expandLot === `${realLot.lotId}_${idx}` && (
+                          <ProductSpecsRow lot={realLot} />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              )
             )}
           </div>
         </div>
