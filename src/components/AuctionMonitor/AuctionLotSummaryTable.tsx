@@ -25,40 +25,35 @@ export type BidRowData = {
   bidTime: string;
 };
 
-// --- DUMMY DATA FROM THE SCREENSHOT ---
-const summary: SummaryData = {
-  bestLandedCost: '£9.35',
-  bestSupplier: '#1 SilverTrade Ltd.',
-  estimatedSavings: '£2.85/unit',
-  savingsNote: '£5,700',
-  previousCost: '£12.20',
-  previousNote: '/ unit',
-  activeBidders: 5,
+// --- PROPS ---
+type Props = {
+  lots: { id: string, label: string }[];
+  selectedLotId: string;
+  onSelectLot: (id: string) => void;
+  summary: SummaryData;
+  bids: BidRowData[];
 };
 
-const bids: BidRowData[] = [
-  { id: '1', rank: 1, lotId: 'LOT-001', product: 'Kraft Boxes', supplier: 'SilverTrade Ltd.', fobCost: '$10.00', freight: '£0.80', duty: '5%', landedCost: 9.35, bidTime: '14:32:15' },
-  { id: '2', rank: 2, lotId: 'LOT-001', product: 'Kraft Boxes', supplier: 'OceanPack Corp', fobCost: '$9.80', freight: '£1.00', duty: '7%', landedCost: 9.60, bidTime: '14:32:15' },
-  { id: '3', rank: 1, lotId: 'LOT-001', product: 'Kraft Boxes', supplier: 'GlobalCarton Inc', fobCost: '$9.50', freight: '£1.10', duty: '8%', landedCost: 9.75, bidTime: '14:32:15' },
-  { id: '4', rank: 1, lotId: 'LOT-001', product: 'Kraft Boxes', supplier: 'EastBridge Exim', fobCost: '$10.20', freight: '£0.70', duty: '4%', landedCost: 9.90, bidTime: '14:32:15' },
-  { id: '5', rank: 1, lotId: 'LOT-001', product: 'Kraft Boxes', supplier: 'Apex Exporters', fobCost: '$9.70', freight: '£1.20', duty: '6%', landedCost: 10.05, bidTime: '14:32:15' },
-];
-
-// type Props = {
-//   lots: { id: string, label: string }[];
-//   selectedLotId: string;
-//   onSelectLot: (id: string) => void;
-//   summary: SummaryData;
-//   bids: BidRowData[];
-// };
-
-
-// --- REACT COMPONENT ---
-export default function AuctionDashboard() {
+export default function AuctionLotSummaryTable({ lots, selectedLotId, onSelectLot, summary, bids }: Props) {
   const bestLandedCost = bids.length ? Math.min(...bids.map((b) => b.landedCost)) : null;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm font-sans mt-12">
+      {/* LOT SELECTOR */}
+      {lots.length > 1 && (
+        <div className="flex gap-2 px-6 pt-6 pb-2">
+          {lots.map(lot => (
+            <button
+              key={lot.id}
+              className={`px-4 py-1.5 rounded-full border text-sm font-medium transition ${selectedLotId === lot.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              onClick={() => onSelectLot(lot.id)}
+            >
+              {lot.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* LOT SUMMARY SECTION */}
       <div className="px-6 pt-6 pb-4">
         <h2 className="text-xs text-gray-500 font-semibold tracking-wider mb-4">

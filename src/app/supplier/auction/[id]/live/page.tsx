@@ -8,6 +8,7 @@ import { auctionService } from '@/services';
 import { Auction } from '@/types/auction';
 import { bidService } from '@/services';
 import { Bid } from '@/types/bid';
+import { getSocket, joinAuctionRoom, disconnectSocket } from '@/lib/socket';
 
 const initialActiveBids = [
   {
@@ -84,6 +85,7 @@ export default function SupplierAuctionLivePage() {
   const [activeBids, setActiveBids] = useState<Bid[]>([]);
   const [editBid, setEditBid] = useState<string | null>(null); // bid._id being edited
   const [editBidValue, setEditBidValue] = useState<string>('');
+  const [isPaused, setIsPaused] = useState(false);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -141,6 +143,19 @@ export default function SupplierAuctionLivePage() {
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [auctionData?.endTime]);
+
+  // Socket: Listen for auction pause/resume
+  useEffect(() => {
+    if (!auctionId) return;
+    const socket = getSocket();
+    joinAuctionRoom(auctionId);
+    socket.on('auctionStatusChanged', (data) => {
+      setIsPaused(data.status === 'Paused');
+    });
+    return () => {
+      disconnectSocket();
+    };
+  }, [auctionId]);
 
   // Fetch active bids ranking for this auction
   const fetchRanking = async () => {
@@ -223,7 +238,7 @@ export default function SupplierAuctionLivePage() {
 
   // Place bid handler
   const handlePlaceBid = async (lot: Auction['lots'][0]) => {
-    if (!auctionData) return;
+    if (!auctionData || isPaused) return;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -251,6 +266,7 @@ export default function SupplierAuctionLivePage() {
 
   // Update bid handler
   const handleUpdateBid = async (bid: Bid) => {
+    if (isPaused) return;
     setIsSubmitting(true);
     try {
       const payload = {
@@ -320,6 +336,11 @@ export default function SupplierAuctionLivePage() {
   return (
     <SupplierLayout>
       <div className="pt-8 pb-2 px-4 min-h-screen bg-[#fafbfc]">
+        {isPaused && (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4 text-center font-semibold text-lg">
+            Auction is currently <span className="text-yellow-900">Paused</span>. Bidding is disabled.
+          </div>
+        )}
         <AuctionHeader />
 
         <div className="max-w-[1100px] mx-auto">
@@ -364,12 +385,12 @@ export default function SupplierAuctionLivePage() {
                               value={editBidValue}
                               onChange={e => setEditBidValue(e.target.value)}
                               min={0}
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || isPaused}
                             />
                             <button
                               className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
                               title="Confirm"
-                              disabled={isSubmitting || !editBidValue}
+                              disabled={isSubmitting || !editBidValue || isPaused}
                               onClick={() => handleUpdateBid(bid)}
                             >
                               ✓
@@ -377,7 +398,7 @@ export default function SupplierAuctionLivePage() {
                             <button
                               className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
                               onClick={() => setEditBid(null)}
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || isPaused}
                             >
                               ×
                             </button>
@@ -392,7 +413,7 @@ export default function SupplierAuctionLivePage() {
                                 setEditBid(bid._id);
                                 setEditBidValue(bid.amount.toString());
                               }}
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || isPaused}
                             >
                               ✎
                             </button>
@@ -460,12 +481,12 @@ export default function SupplierAuctionLivePage() {
                                   value={bidInput[realLot._id] || ''}
                                   onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
                                   min={0}
-                                  disabled={isSubmitting}
+                                  disabled={isSubmitting || isPaused}
                                 />
                                 <button
                                   className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
                                   title="Confirm"
-                                  disabled={isSubmitting || !bidInput[realLot._id]}
+                                  disabled={isSubmitting || !bidInput[realLot._id] || isPaused}
                                   onClick={() => handlePlaceBid(realLot)}
                                 >
                                   ✓
@@ -473,7 +494,7 @@ export default function SupplierAuctionLivePage() {
                                 <button
                                   className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
                                   onClick={() => setPlacingBid(null)}
-                                  disabled={isSubmitting}
+                                  disabled={isSubmitting || isPaused}
                                 >
                                   ×
                                 </button>
@@ -483,6 +504,7 @@ export default function SupplierAuctionLivePage() {
                                 className="text-blue-600 underline font-medium px-1 py-1"
                                 style={{ fontSize: 15, letterSpacing: '-0.5px' }}
                                 onClick={() => setPlacingBid(realLot._id)}
+                                disabled={isPaused}
                               >
                                 Place bid
                               </button>
