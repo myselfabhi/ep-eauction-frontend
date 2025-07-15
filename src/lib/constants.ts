@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
     CREATE: '/auction/create',
     GET_ALL: '/auction',
     GET_BY_ID: (id: string) => `/auction/${id}`,
+    GET_SINGLE: (id: string) => `/auction/${id}`,
     UPDATE: (id: string) => `/auction/update/${id}`,
     DELETE: (id: string) => `/auction/${id}`,
     PAUSE: (id: string) => `/auction/${id}/pause`,

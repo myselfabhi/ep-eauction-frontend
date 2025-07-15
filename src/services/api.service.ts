@@ -56,6 +56,8 @@ class ApiService {
 
     getById: (id: string) => this.get<Auction>(API_ENDPOINTS.AUCTION.GET_BY_ID(id)),
 
+    getSingle: (id: string) => this.get<Auction>(API_ENDPOINTS.AUCTION.GET_SINGLE(id)),
+
     create: (auctionData: Partial<Auction>) =>
       this.post<Auction>(API_ENDPOINTS.AUCTION.CREATE, auctionData),
 

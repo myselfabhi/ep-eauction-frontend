@@ -1,28 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import ConfirmBidModal from '@/components/ui/modal/ConfirmBidModal';
-
-// Dummy auction data and lots
-const auction = {
-  id: 'AUC-2025-CC-001',
-  title: 'Single-Use Coffee Cup Procurement - Q2 2025',
-  type: 'Reverse Auction (FOB bidding)',
-  minDecrement: '$0.10',
-  closing: 'June 3, 2025, 4:00 PM GMT',
-};
-
-const lotSpecs = {
-  dimensions: '92mm H × 80mm top × 57mm base',
-  material: 'Food grade paperboard, PE coating',
-  minOrder: '10,000 units',
-  weight: '4.2g per unit',
-  hsCode: '4823.69.00',
-  unitPack: '50/sleeve, 1000/carton',
-  certifications: 'FDA, BRC required',
-  quality: 'ISO 9001 compliant',
-};
+import { auctionService } from '@/services';
+import { Auction } from '@/types/auction';
 
 const initialActiveBids = [
   {
@@ -63,65 +46,102 @@ const initialActiveBids = [
   },
 ];
 
-const initialAvailableLots = [
-  {
-    id: 'LOT-CC-001',
-    product: '8oz Paper Cups',
-    quantity: '50,000 units',
-    bidders: 12,
-    bid: '',
-    inputMode: false,
-    confirmed: false,
-    disabled: false,
-  },
-  ...Array.from({ length: 4 }).map(() => ({
-    id: 'LOT-CC-001',
-    product: '8oz Paper Cups',
-    quantity: '50,000 units',
-    bidders: 12,
-    bid: '',
-    inputMode: false,
-    confirmed: false,
-    disabled: false,
-  })),
-];
+// const initialAvailableLots = [
+//   {
+//     id: 'LOT-CC-001',
+//     product: '8oz Paper Cups',
+//     quantity: '50,000 units',
+//     bidders: 12,
+//     bid: '',
+//     inputMode: false,
+//     confirmed: false,
+//     disabled: false,
+//   },
+//   ...Array.from({ length: 4 }).map(() => ({
+//     id: 'LOT-CC-001',
+//     product: '8oz Paper Cups',
+//     quantity: '50,000 units',
+//     bidders: 12,
+//     bid: '',
+//     inputMode: false,
+//     confirmed: false,
+//     disabled: false,
+//   })),
+// ];
 
 export default function SupplierAuctionLivePage() {
+  const params = useParams();
+  const auctionId = params.id as string;
+  
+  // Real auction data state
+  const [auctionData, setAuctionData] = useState<Auction | null>(null);
+  
   const [expandLot, setExpandLot] = useState<string | null>('LOT-CC-001_0');
   const [showLots, setShowLots] = useState(true);
   const [activeBids, setActiveBids] = useState(initialActiveBids);
-  const [availableLots, setAvailableLots] = useState(initialAvailableLots);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [pendingBidIdx, setPendingBidIdx] = useState<number | null>(null);
+
+  // Fetch auction data on component mount
+  useEffect(() => {
+    const fetchAuctionData = async () => {
+      try {
+        console.log('DEBUG: Fetching auction data for ID:', auctionId);
+        const response = await auctionService.getSingle(auctionId);
+        console.log('DEBUG: Live auction page - Auction data:', response);
+        console.log('DEBUG: Live auction page - Lots:', response.lots);
+        setAuctionData(response);
+      } catch (err) {
+        console.error('DEBUG: Error fetching auction data:', err);
+      }
+    };
+
+    if (auctionId) {
+      fetchAuctionData();
+    }
+  }, [auctionId]);
 
   // Auction Header (matches your screenshot)
   function AuctionHeader() {
+    if (!auctionData) {
+      return (
+        <div className="flex justify-between items-start mb-8 w-full max-w-[1050px] mx-auto">
+          <div className="text-[20px] font-semibold mb-[2px] tracking-tight text-[#232323]">
+            Loading auction data...
+          </div>
+        </div>
+      );
+    }
+
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleString();
+    };
+
     return (
       <div className="flex justify-between items-start mb-8 w-full max-w-[1050px] mx-auto">
         <div>
           <div className="text-[20px] font-semibold mb-[2px] tracking-tight text-[#232323]">
-            {auction.title}
+            {auctionData.title}
           </div>
           <div className="flex items-center gap-2 text-[13px] text-[#555] mb-[3px]">
             Auction ID:
-            <span className="font-mono text-[13px] font-medium text-black">{auction.id}</span>
+            <span className="font-mono text-[13px] font-medium text-black">{auctionData._id}</span>
             <span className="mx-2 text-[#aaa]">|</span>
             <a className="text-blue-600 underline cursor-pointer font-medium" href="#">View details</a>
           </div>
           <div className="flex items-center gap-12 mt-1 text-[13px]">
             <div>
-              <div className="text-[#777] font-medium">Auction Type</div>
-              <div className="text-black font-medium">{auction.type}</div>
+              <div className="text-[#777] font-medium">Currency</div>
+              <div className="text-black font-medium">{auctionData.currency}</div>
             </div>
             <div>
-              <div className="text-[#777] font-medium">Min. Decrement</div>
-              <div className="text-black font-medium">{auction.minDecrement}</div>
+              <div className="text-[#777] font-medium">Reserve Price</div>
+              <div className="text-black font-medium">{auctionData.reservePrice}</div>
             </div>
             <div>
-              <div className="text-[#777] font-medium">Closing</div>
-              <div className="text-black font-medium">{auction.closing}</div>
+              <div className="text-[#777] font-medium">End Time</div>
+              <div className="text-black font-medium">{formatDate(auctionData.endTime)}</div>
             </div>
           </div>
         </div>
@@ -138,54 +158,47 @@ export default function SupplierAuctionLivePage() {
   const tdRank = "font-semibold";
 
   // --- Confirm Modal Handlers ---
-  const handleOpenConfirm = (idx: number) => {
-    setPendingBidIdx(idx);
-    setModalOpen(true);
-  };
   const handleCancel = () => {
     setModalOpen(false);
-    setPendingBidIdx(null);
   };
   const handleConfirm = () => {
-    if (pendingBidIdx != null) {
-      setAvailableLots((prev) =>
-        prev.map((lot, i) =>
-          i === pendingBidIdx ? { ...lot, confirmed: true } : lot
-        )
-      );
-    }
     setModalOpen(false);
-    setPendingBidIdx(null);
   };
 
-  function ProductSpecsRow() {
+  function ProductSpecsRow({ lot }: { lot: Auction['lots'][0] }) {
+    const formatDimensions = (dims: { l?: string; w?: string; h?: string } | undefined) => {
+      if (!dims) return 'N/A';
+      const { l, w, h } = dims;
+      return `${l || 'N/A'} x ${w || 'N/A'} x ${h || 'N/A'}`;
+    };
+
     return (
       <tr className="bg-[#f7f8fa] border-b border-[#f1f1f1]">
         <td colSpan={8} className="py-4 px-8">
           <div className="grid grid-cols-4 gap-y-1 gap-x-7 text-xs">
             <div>
-              <b>Dimensions</b><br />{lotSpecs.dimensions}
+              <b>Dimensions</b><br />{formatDimensions(lot.dimensions)}
             </div>
             <div>
-              <b>Material</b><br />{lotSpecs.material}
+              <b>Material</b><br />{lot.material || 'N/A'}
             </div>
             <div>
-              <b>Min Order</b><br />{lotSpecs.minOrder}
+              <b>HS Code</b><br />{lot.hsCode || 'N/A'}
             </div>
             <div>
-              <b>HS Code</b><br />{lotSpecs.hsCode}
+              <b>Previous Cost</b><br />{lot.prevCost || 'N/A'}
             </div>
             <div>
-              <b>Weight</b><br />{lotSpecs.weight}
+              <b>Volume</b><br />{lot.volume || 'N/A'}
             </div>
             <div>
-              <b>Unit Pack</b><br />{lotSpecs.unitPack}
+              <b>Lot ID</b><br />{lot.lotId || 'N/A'}
             </div>
             <div>
-              <b>Certifications</b><br />{lotSpecs.certifications}
+              <b>Created</b><br />{new Date(lot.createdAt).toLocaleDateString()}
             </div>
             <div>
-              <b>Quality Standards</b><br />{lotSpecs.quality}
+              <b>Updated</b><br />{new Date(lot.updatedAt).toLocaleDateString()}
             </div>
           </div>
         </td>
@@ -276,7 +289,7 @@ export default function SupplierAuctionLivePage() {
           <div className="bg-white rounded-2xl border border-[#ececec] shadow">
             <div className="flex items-center px-6 pt-4 font-semibold text-[15px] text-[#232323]">
               <span>AVAILABLE LOTS</span>
-              <span className="ml-1 text-gray-400">{availableLots.length}</span>
+              <span className="ml-1 text-gray-400">{auctionData?.lots?.length || 0}</span>
               <span className="ml-5 text-[13px] text-gray-500 cursor-pointer select-none"
                 onClick={() => setShowLots((prev) => !prev)}
               >
@@ -297,82 +310,38 @@ export default function SupplierAuctionLivePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {availableLots.map((lot, idx) => (
+                  {auctionData?.lots?.map((realLot, idx: number) => (
                     <React.Fragment key={idx}>
                       <tr className="border-b border-[#f1f1f1] hover:bg-[#fafbfc] group transition">
                         <td className={tdBase + ' font-semibold text-black'}>
                           <button
                             className="focus:outline-none"
-                            onClick={() => setExpandLot(expandLot === `${lot.id}_${idx}` ? null : `${lot.id}_${idx}`)}
+                            onClick={() => setExpandLot(expandLot === `${realLot.lotId}_${idx}` ? null : `${realLot.lotId}_${idx}`)}
                           >
-                            {expandLot === `${lot.id}_${idx}` ? '▾' : '▸'}
+                            {expandLot === `${realLot.lotId}_${idx}` ? '▾' : '▸'}
                           </button>{' '}
-                          {lot.id}
+                          {realLot.lotId}
                         </td>
-                        <td className={tdBase}>{lot.product}</td>
-                        <td className={tdBase}>{lot.quantity}</td>
-                        <td className={tdBase}>{lot.bidders}</td>
+                        <td className={tdBase}>{realLot.name}</td>
+                        <td className={tdBase}>{realLot.volume || 'N/A'}</td>
+                        <td className={tdBase}>--</td>
                         <td className={tdBase}>--</td>
                         <td className={tdBase}>--</td>
                         <td className={tdBase}>
-                          {!lot.bid && !lot.inputMode && (
-                            <button
-                              className="text-blue-600 underline font-medium px-1 py-1"
-                              style={{ fontSize: 15, letterSpacing: '-0.5px' }}
-                              onClick={() =>
-                                setAvailableLots((prev) =>
-                                  prev.map((l, i) =>
-                                    i === idx ? { ...l, inputMode: true } : l
-                                  )
-                                )
-                              }
-                            >
-                              Place bid
-                            </button>
-                          )}
-                          {(lot.inputMode || lot.bid) && (
-                            <div className="flex items-center gap-2">
-                              <input
-                                className={`border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm
-                                  ${lot.disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
-                                `}
-                                value={lot.bid}
-                                onChange={e =>
-                                  setAvailableLots((prev) =>
-                                    prev.map((l, i) =>
-                                      i === idx ? { ...l, bid: e.target.value } : l
-                                    )
-                                  )
-                                }
-                                readOnly={lot.confirmed || lot.disabled}
-                                disabled={lot.disabled}
-                                placeholder="$"
-                                style={{
-                                  outline: 'none',
-                                  borderColor: '#e4e4e7',
-                                  background: lot.disabled ? '#f4f4f5' : undefined,
-                                }}
-                              />
-                              <span className="text-gray-400 px-1 text-lg cursor-pointer">⌄</span>
-                              {lot.confirmed ? (
-                                <span className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold">
-                                  ✓
-                                </span>
-                              ) : !lot.disabled ? (
-                                <button
-                                  onClick={() => handleOpenConfirm(idx)}
-                                  className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
-                                  title="Confirm"
-                                >
-                                  ✓
-                                </button>
-                              ) : null}
-                            </div>
-                          )}
+                          <button
+                            className="text-blue-600 underline font-medium px-1 py-1"
+                            style={{ fontSize: 15, letterSpacing: '-0.5px' }}
+                            onClick={() => {
+                              // Handle bid placement
+                              console.log('DEBUG: Placing bid for lot:', realLot);
+                            }}
+                          >
+                            Place bid
+                          </button>
                         </td>
                       </tr>
-                      {expandLot === `${lot.id}_${idx}` && (
-                        <ProductSpecsRow />
+                      {expandLot === `${realLot.lotId}_${idx}` && (
+                        <ProductSpecsRow lot={realLot} />
                       )}
                     </React.Fragment>
                   ))}

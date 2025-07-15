@@ -70,14 +70,40 @@ export default function SupplierDashboard() {
     if (isLive) setConfirmationData({ auctionId, capacities });
   };
 
-  const handleConfirmAndEnter = () => {
+  const handleConfirmAndEnter = async () => {
     if (!confirmationData) return;
-    setAuctionDetails(prev => ({
-      ...prev,
-      [confirmationData.auctionId]: { capacities: confirmationData.capacities, confirmed: true },
-    }));
-    setConfirmationData(null);
-    router.push(ROUTES.SUPPLIER.AUCTION.LIVE(confirmationData.auctionId));
+    
+    try {
+      console.log('DEBUG: Calling listSingleAuctions for auction ID:', confirmationData.auctionId);
+      
+      // Call the listSingleAuctions endpoint
+      const response = await auctionService.getSingle(confirmationData.auctionId);
+      console.log('DEBUG: listSingleAuctions response:', response);
+      console.log('DEBUG: Response type:', typeof response);
+      console.log('DEBUG: Response keys:', Object.keys(response || {}));
+      
+      if (response) {
+        console.log('DEBUG: Single auction details:', response);
+        console.log('DEBUG: Auction lots:', response.lots);
+        console.log('DEBUG: Lots length:', response.lots?.length || 0);
+      }
+      
+      setAuctionDetails(prev => ({
+        ...prev,
+        [confirmationData.auctionId]: { capacities: confirmationData.capacities, confirmed: true },
+      }));
+      setConfirmationData(null);
+      router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
+    } catch (error) {
+      console.error('DEBUG: Error calling listSingleAuctions:', error);
+      // Still proceed with navigation even if the API call fails
+      setAuctionDetails(prev => ({
+        ...prev,
+        [confirmationData.auctionId]: { capacities: confirmationData.capacities, confirmed: true },
+      }));
+      setConfirmationData(null);
+      router.push(`/supplier/auction/${confirmationData.auctionId}/live`);
+    }
   };
 
   // Fetch auctions on component mount
