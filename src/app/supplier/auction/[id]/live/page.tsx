@@ -75,6 +75,7 @@ export default function SupplierAuctionLivePage() {
   
   // Real auction data state
   const [auctionData, setAuctionData] = useState<Auction | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>('00 : 00 : 00');
   
   const [expandLot, setExpandLot] = useState<string | null>('LOT-CC-001_0');
   const [showLots, setShowLots] = useState(true);
@@ -101,6 +102,36 @@ export default function SupplierAuctionLivePage() {
       fetchAuctionData();
     }
   }, [auctionId]);
+
+  // Live countdown timer for auction end
+  useEffect(() => {
+    if (!auctionData?.endTime) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const end = new Date(auctionData.endTime);
+      const diff = end.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft('00 : 00 : 00');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft(
+        `${hours.toString().padStart(2, '0')} : ${minutes
+          .toString()
+          .padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`
+      );
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [auctionData?.endTime]);
 
   // Auction Header (matches your screenshot)
   function AuctionHeader() {
@@ -147,7 +178,7 @@ export default function SupplierAuctionLivePage() {
         </div>
         <div className="border border-red-400 rounded-lg px-10 py-5 flex flex-col items-center min-w-[170px] shadow-sm bg-white mt-[-12px]">
           <div className="uppercase text-red-600 font-semibold text-xs tracking-wide mb-1">AUCTION LIVE</div>
-          <div className="font-mono text-2xl font-semibold text-red-600 tracking-wide mb-1">02 : 02 : 02</div>
+          <div className="font-mono text-2xl font-semibold text-red-600 tracking-wide mb-1">{timeLeft}</div>
           <div className="text-xs text-gray-500">Time Remaining</div>
         </div>
       </div>
