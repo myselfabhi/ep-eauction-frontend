@@ -11,10 +11,12 @@ function SupplierOnboardingPageInner() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [email, setEmail] = useState(searchParams.get("email") || "");
   const [emailInput, setEmailInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (email) {
       setChecking(true);
+      setError(null);
       checkEmail(email)
         .then((exists) => {
           if (exists) {
@@ -23,11 +25,15 @@ function SupplierOnboardingPageInner() {
             setShowOnboarding(true);
           }
         })
+        .catch(() => {
+          setError('Could not check email. Please try again.');
+        })
         .finally(() => setChecking(false));
     }
   }, [email, router]);
 
   if (checking) return <div className="flex justify-center items-center min-h-screen">Checking...</div>;
+  if (error) return <div className="flex justify-center items-center min-h-screen text-red-600">{error}</div>;
 
   if (!email && !showOnboarding) {
     // Show email entry form
