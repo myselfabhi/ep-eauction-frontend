@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import ConfirmBidModal from '@/components/ui/modal/ConfirmBidModal';
@@ -10,44 +10,44 @@ import { bidService } from '@/services';
 import { Bid } from '@/types/bid';
 import { getSocket, joinAuctionRoom, disconnectSocket } from '@/lib/socket';
 
-const initialActiveBids = [
-  {
-    id: 'LOT-CC-001',
-    product: '8oz Paper Cups',
-    quantity: '50,000 units',
-    bidders: 12,
-    lastUpdate: '2s ago',
-    rank: 1,
-    yourBid: '$0.40',
-    updateBid: '$0.40',
-    status: 'success',
-    confirmed: true,
-  },
-  {
-    id: 'LOT-CC-001',
-    product: '8oz Paper Cups',
-    quantity: '50,000 units',
-    bidders: 12,
-    lastUpdate: '2s ago',
-    rank: 6,
-    yourBid: '$0.40',
-    updateBid: '$0.60',
-    status: 'danger',
-    confirmed: false,
-  },
-  {
-    id: 'LOT-CC-001',
-    product: '8oz Paper Cups',
-    quantity: '50,000 units',
-    bidders: 12,
-    lastUpdate: '2s ago',
-    rank: 10,
-    yourBid: '$0.40',
-    updateBid: '$0.40',
-    status: 'danger',
-    confirmed: false,
-  },
-];
+// const initialActiveBids = [
+//   {
+//     id: 'LOT-CC-001',
+//     product: '8oz Paper Cups',
+//     quantity: '50,000 units',
+//     bidders: 12,
+//     lastUpdate: '2s ago',
+//     rank: 1,
+//     yourBid: '$0.40',
+//     updateBid: '$0.40',
+//     status: 'success',
+//     confirmed: true,
+//   },
+//   {
+//     id: 'LOT-CC-001',
+//     product: '8oz Paper Cups',
+//     quantity: '50,000 units',
+//     bidders: 12,
+//     lastUpdate: '2s ago',
+//     rank: 6,
+//     yourBid: '$0.40',
+//     updateBid: '$0.60',
+//     status: 'danger',
+//     confirmed: false,
+//   },
+//   {
+//     id: 'LOT-CC-001',
+//     product: '8oz Paper Cups',
+//     quantity: '50,000 units',
+//     bidders: 12,
+//     lastUpdate: '2s ago',
+//     rank: 10,
+//     yourBid: '$0.40',
+//     updateBid: '$0.40',
+//     status: 'danger',
+//     confirmed: false,
+//   },
+// ];
 
 // const initialAvailableLots = [
 //   {
@@ -158,7 +158,7 @@ export default function SupplierAuctionLivePage() {
   }, [auctionId]);
 
   // Fetch active bids ranking for this auction
-  const fetchRanking = async () => {
+  const fetchRanking = useCallback(async () => {
     if (!auctionId) return;
     try {
       const ranking = await bidService.getRanking(auctionId);
@@ -166,12 +166,12 @@ export default function SupplierAuctionLivePage() {
     } catch (err) {
       console.error('Failed to fetch bid ranking:', err);
     }
-  };
+  }, [auctionId]);
 
   // Fetch ranking on mount and after each bid
   useEffect(() => {
     fetchRanking();
-  }, [auctionId]);
+  }, [auctionId, fetchRanking]);
 
   // Auction Header (matches your screenshot)
   function AuctionHeader() {
@@ -251,7 +251,7 @@ export default function SupplierAuctionLivePage() {
         duty: 0,
         performanceScore: 0,
       };
-      const response = await bidService.create(payload);
+      await bidService.create(payload);
       // Add the new bid to the table and fetch latest ranking
       await fetchRanking();
       setBidInput(prev => ({ ...prev, [lot._id]: '' }));

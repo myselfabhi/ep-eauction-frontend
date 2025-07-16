@@ -29,7 +29,6 @@ export default function EPMonitorAuctionPage() {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [highlightedBidId, setHighlightedBidId] = useState<string | null>(null);
   const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
 
@@ -63,10 +62,8 @@ export default function EPMonitorAuctionPage() {
     if (!id || !auction) return;
     const socket = getSocket();
     joinAuctionRoom(id as string);
-    socket.on('newBid', (data: { bid: Bid }) => {
+    socket.on('newBid', () => {
       if (isPaused) return;
-      setHighlightedBidId(data.bid._id);
-      setTimeout(() => setHighlightedBidId(null), 2000);
       fetchAuctionRanking(id as string).then(setRankedBids);
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -165,10 +162,10 @@ export default function EPMonitorAuctionPage() {
         id: bid._id,
         rank: idx + 1,
         lotId: bid.lot || '',
-        product: (bid as any).product || productName,
+        product: bid.product ?? productName,
         supplier: getSupplierName(bid.supplier),
         fobCost: `${auction.currency} ${bid.fobCost?.toFixed(2) ?? '--'}`,
-        freight: `${auction.currency} ${(bid as any).freight?.toFixed(2) ?? '--'}`,
+        freight: `${auction.currency} ${bid.freight?.toFixed(2) ?? '--'}`,
         duty: typeof bid.duty === 'number' ? `${bid.duty.toFixed(0)}%` : '--',
         landedCost: Number(bid.totalCost),
         bidTime: new Date(bid.updatedAt).toLocaleTimeString(),

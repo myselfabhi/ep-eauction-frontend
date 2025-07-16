@@ -16,4 +16,6 @@ export interface Bid {
   createdAt: string;
   updatedAt: string;
   score?: number;       // Added for ranking response
+  product?: string;
+  freight?: number;
 }

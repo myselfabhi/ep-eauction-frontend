@@ -27,6 +27,11 @@ class ApiService {
     return response.data;
   }
 
+  // Expose a public generic GET for special cases
+  public async getRaw<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
+    return this.get<T>(endpoint, params);
+  }
+
   // Auth API methods
   auth = {
     login: (credentials: { email: string; password: string }) =>

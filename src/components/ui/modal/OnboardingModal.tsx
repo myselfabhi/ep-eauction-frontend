@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function OnboardingModal({
   onComplete,
+  initialEmail,
 }: {
   onComplete: (data: {
     email: string;
@@ -12,9 +13,10 @@ export default function OnboardingModal({
     port: string;
     country: string;
   }) => void;
+  initialEmail?: string;
 }) {
   const [form, setForm] = useState({
-    email: '',
+    email: initialEmail || '',
     password: '',
     confirmPassword: '',
     name: '',

@@ -45,6 +45,7 @@ export const API_ENDPOINTS = {
     UPDATE: '/users/profile',
     GET_ALL: '/users',
     GET_BY_ID: (id: string) => `/users/${id}`,
+    CHECK_EMAIL: (email: string) => `/users/check-email?email=${encodeURIComponent(email)}`,
   },
 
   // Supplier endpoints
