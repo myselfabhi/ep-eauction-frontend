@@ -1,6 +1,4 @@
 import { userService, authService } from './api.service';
-import { apiService } from './api.service';
-import { API_ENDPOINTS } from '@/lib/constants';
 import { User } from '@/types/user';
 
 // User management functions
@@ -47,15 +45,6 @@ export const verifyForgotOtp = async (email: string, otp: string) => {
 
 export const resetPassword = async (email: string, otp: string, newPassword: string) => {
   return authService.resetPassword(email, otp, newPassword);
-};
-
-export const checkEmail = async (email: string): Promise<boolean> => {
-  try {
-    const res = await apiService.getRaw<{ exists: boolean }>(API_ENDPOINTS.USER.CHECK_EMAIL(email));
-    return !!res.exists;
-  } catch {
-    return false;
-  }
 };
 
 // Export the centralized services for new code

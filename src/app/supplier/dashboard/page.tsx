@@ -1,8 +1,9 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import OnboardingModal from '@/components/ui/modal/OnboardingModal';
@@ -38,26 +39,31 @@ type SupplierAuction = {
   lots?: LotData[];
 };
 
-export default function SupplierDashboard() {
+function SupplierDashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const invited = searchParams.get('invited'); // could be email or user id
   const [tab, setTab] = useState<'active' | 'history'>('active');
   const [notifOpen, setNotifOpen] = useState(false);
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const [onboardingDone] = useState(false);
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
   const [auctions, setAuctions] = useState<SupplierAuction[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Check onboarding status on mount
+  // Only show onboarding if invited param is present and not an ObjectId
   useEffect(() => {
-    const user = localStorage.getItem('epUser');
-    const token = localStorage.getItem('token');
-    console.log('DEBUG: epUser in localStorage:', user);
-    console.log('DEBUG: token in localStorage:', token);
-    if (user) {
-      setOnboardingDone(true);
+    if (invited) {
+      if (/^[0-9a-fA-F]{24}$/.test(invited)) {
+        // Existing user, redirect to login
+        router.replace(ROUTES.AUTH.LOGIN);
+      } else {
+        // New user, show onboarding modal
+        setShowOnboarding(true);
+      }
     }
-  }, []);
+  }, [invited, router]);
 
   const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
@@ -238,7 +244,7 @@ export default function SupplierDashboard() {
 
   return (
     <SupplierLayout>
-      {!onboardingDone && (
+      {showOnboarding && (
         <OnboardingModal
           onComplete={async (data) => {
             try {
@@ -265,15 +271,9 @@ export default function SupplierDashboard() {
                 throw new Error(errorData.error || 'Registration failed');
               }
 
-              const resData = await res.json();
-              console.log('Registration successful:', resData);
-
-              // Mark onboarding as done after successful registration
-              setOnboardingDone(true);
-
+              setShowOnboarding(false); // Hide modal only after success
               router.push(ROUTES.AUTH.LOGIN);
-            } catch (err) {
-              console.error('Registration error:', err);
+            } catch {
               alert('Registration failed. Please try again.');
             }
           }}
@@ -318,7 +318,7 @@ export default function SupplierDashboard() {
         </div>
       )}
 
-      {onboardingDone && (
+      {onboardingDone && !showOnboarding && (
         <div className="px-10 py-8 flex flex-col min-h-screen">
           <div className="flex justify-between items-start mb-10 w-full max-w-7xl mx-auto">
             <div>
@@ -447,5 +447,13 @@ export default function SupplierDashboard() {
         </div>
       )}
     </SupplierLayout>
+  );
+}
+
+export default function SupplierDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SupplierDashboardContent />
+    </Suspense>
   );
 }
