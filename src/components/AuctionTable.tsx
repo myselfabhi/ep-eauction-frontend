@@ -167,6 +167,12 @@ export default function AuctionTable({
                         <span className="text-[#EF4444] text-xs font-semibold">Auction Live</span>
                       </>
                     )}
+                    {auction.status === 'Paused' && (
+                      <>
+                        <span className="h-2 w-2 bg-yellow-400 rounded-full" />
+                        <span className="text-yellow-700 text-xs font-semibold">Paused</span>
+                      </>
+                    )}
                     {auction.status === 'Scheduled' && (
                       <>
                         <Image src="/icons/schedule_blue.svg" alt="Scheduled" width={16} height={16} />
@@ -214,7 +220,7 @@ export default function AuctionTable({
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="relative flex justify-end items-center gap-2 dropdown-menu">
-                    {auction.status === 'Active' && (
+                    {(auction.status === 'Active' || auction.status === 'Paused') && (
                       <button
                         onClick={() => onMonitorClick(auction._id)}
                         className="flex items-center gap-1 px-3 py-1 border border-border rounded text-sm font-medium"
