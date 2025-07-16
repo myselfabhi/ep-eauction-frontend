@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function OnboardingModal({
   onComplete,
+  defaultEmail = '',
 }: {
   onComplete: (data: {
     email: string;
@@ -12,9 +13,10 @@ export default function OnboardingModal({
     port: string;
     country: string;
   }) => void;
+  defaultEmail?: string;
 }) {
   const [form, setForm] = useState({
-    email: '',
+    email: defaultEmail,
     password: '',
     confirmPassword: '',
     name: '',
@@ -67,6 +69,7 @@ export default function OnboardingModal({
                 onChange={e => handleChange('email', e.target.value)}
                 className="w-full border rounded-md text-xs px-3 py-2"
                 placeholder="your@email.com"
+                disabled={!!defaultEmail}
               />
               {!emailValid && form.email && (
                 <p className="text-xs text-red-500 mt-1">Please enter a valid email.</p>

@@ -45,23 +45,29 @@ function SupplierDashboardContent() {
   const invited = searchParams.get('invited'); // could be email or user id
   const [tab, setTab] = useState<'active' | 'history'>('active');
   const [notifOpen, setNotifOpen] = useState(false);
-  const [onboardingDone] = useState(false);
   const [capacityModalOpen, setCapacityModalOpen] = useState<{ auctionId: string; readOnly: boolean } | null>(null);
   const [auctionDetails, setAuctionDetails] = useState<Record<string, { capacities: Record<string, string>; confirmed: boolean }>>({});
   const [confirmationData, setConfirmationData] = useState<{ auctionId: string; capacities: Record<string, string> } | null>(null);
   const [auctions, setAuctions] = useState<SupplierAuction[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [checking, setChecking] = useState(false);
 
-  // Only show onboarding if invited param is present and not an ObjectId
+  // On mount, check if invited param is present and if user exists
   useEffect(() => {
     if (invited) {
-      if (/^[0-9a-fA-F]{24}$/.test(invited)) {
-        // Existing user, redirect to login
-        router.replace(ROUTES.AUTH.LOGIN);
-      } else {
-        // New user, show onboarding modal
-        setShowOnboarding(true);
-      }
+      setChecking(true);
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/by-email?email=${encodeURIComponent(invited)}`)
+        .then(res => res.json())
+        .then(user => {
+          if (user && user._id) {
+            // User exists, redirect to login
+            router.replace(ROUTES.AUTH.LOGIN);
+          } else {
+            // User does not exist, show onboarding modal
+            setShowOnboarding(true);
+          }
+        })
+        .finally(() => setChecking(false));
     }
   }, [invited, router]);
 
@@ -242,6 +248,8 @@ function SupplierDashboardContent() {
 
 
 
+  if (checking) return <div>Checking...</div>;
+
   return (
     <SupplierLayout>
       {showOnboarding && (
@@ -318,7 +326,7 @@ function SupplierDashboardContent() {
         </div>
       )}
 
-      {onboardingDone && !showOnboarding && (
+      {showOnboarding && !checking && (
         <div className="px-10 py-8 flex flex-col min-h-screen">
           <div className="flex justify-between items-start mb-10 w-full max-w-7xl mx-auto">
             <div>
