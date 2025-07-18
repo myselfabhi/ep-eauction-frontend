@@ -40,27 +40,27 @@ export const API_ENDPOINTS = {
 
   // User endpoints
   USER: {
-    BASE: '/users',
-    PROFILE: '/users/profile',
-    UPDATE: '/users/profile',
-    GET_ALL: '/users',
-    GET_BY_ID: (id: string) => `/users/${id}`,
+    BASE: '/user',
+    PROFILE: '/user/profile',
+    UPDATE: '/user/profile',
+    GET_ALL: '/user',
+    GET_BY_ID: (id: string) => `/user/${id}`,
   },
 
   // Supplier endpoints
   SUPPLIER: {
-    BASE: '/suppliers',
-    GET_ALL: '/suppliers',
-    CREATE: '/suppliers',
-    UPDATE: (id: string) => `/suppliers/${id}`,
-    DELETE: (id: string) => `/suppliers/${id}`,
-    INVITE: '/suppliers/invite',
+    BASE: '/supplier',
+    GET_ALL: '/supplier',
+    CREATE: '/supplier',
+    UPDATE: (id: string) => `/supplier/${id}`,
+    DELETE: (id: string) => `/supplier/${id}`,
+    INVITE: '/supplier/invite',
   },
 
   // Currency endpoints
   CURRENCY: {
     BASE: '/currency',
-    RATES: '/currency/rates',
+    RATES: '/currency-rate/',
     UPDATE_RATE: '/currency/rates',
   },
 
@@ -69,15 +69,15 @@ export const API_ENDPOINTS = {
     BASE: '/import-duty',
     PRODUCTS: '/import-duty/products',
     PRODUCT: '/import-duty/product',
-    MATRIX: '/import-duty/matrix',
+    MATRIX: '/import-duty/',
   },
 
   // Invitation endpoints
   INVITATION: {
-    BASE: '/invitations',
-    SEND: '/invitations/send',
-    ACCEPT: (id: string) => `/invitations/${id}/accept`,
-    DECLINE: (id: string) => `/invitations/${id}/decline`,
+    BASE: '/invitation',
+    SEND: '/invitation/send',
+    ACCEPT: (id: string) => `/invitation/${id}/accept`,
+    DECLINE: (id: string) => `/invitation/${id}/decline`,
   },
 } as const;
 
