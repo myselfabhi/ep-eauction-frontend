@@ -208,7 +208,7 @@ export default function ProductLotStep({
 
         {/* Volume */}
         <div>
-          <label className="block text-sm mb-1">Volume</label>
+          <label className="block text-sm mb-1">Quantity</label>
           <input
             type="number"
             placeholder="Number of LOTs"

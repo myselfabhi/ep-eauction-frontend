@@ -35,7 +35,14 @@ export default function EPHeader() {
       {/* Logo */}
       <div
         className="text-xl font-bold cursor-pointer"
-        onClick={() => router.push(ROUTES.EP_MEMBER.DASHBOARD)}
+        onClick={() => {
+          const user = getCurrentUser();
+          if (user?.role === 'Supplier') {
+            router.push('/supplier/dashboard');
+          } else {
+            router.push(ROUTES.EP_MEMBER.DASHBOARD);
+          }
+        }}
       >
         EP Auction
       </div>

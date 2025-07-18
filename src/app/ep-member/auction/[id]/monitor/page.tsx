@@ -63,6 +63,7 @@ export default function EPMonitorAuctionPage() {
     const socket = getSocket();
     joinAuctionRoom(id as string);
     socket.on('newBid', () => {
+      console.log('Received newBid event');
       if (isPaused) return;
       fetchAuctionRanking(id as string).then(setRankedBids);
       setTimeout(() => {
@@ -157,12 +158,11 @@ export default function EPMonitorAuctionPage() {
     if (!auction) return [];
     return rankedBids.map((bid, idx) => {
       const lotObj = auction.lots.find(l => l._id === bid.lot);
-      const productName = lotObj?.name ?? '';
       return {
         id: bid._id,
         rank: idx + 1,
-        lotId: bid.lot || '',
-        product: bid.product ?? productName,
+        lotId: lotObj?.lotId ?? '', // Use the human-readable lotId
+        product: lotObj?.name ?? '',
         supplier: getSupplierName(bid.supplier),
         fobCost: `${auction.currency} ${bid.fobCost?.toFixed(2) ?? '--'}`,
         freight: `${auction.currency} ${bid.freight?.toFixed(2) ?? '--'}`,

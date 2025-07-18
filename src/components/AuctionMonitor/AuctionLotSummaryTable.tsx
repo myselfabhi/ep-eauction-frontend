@@ -142,7 +142,7 @@ export default function AuctionLotSummaryTable({ lots, selectedLotId, onSelectLo
                   <td className="px-4 py-3 font-bold text-green-700">
                     #{bid.rank}
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{bid.lotId}</td>
+                  <td className="px-4 py-3 text-gray-700">LOT-{bid.lotId}</td>
                   <td className="px-4 py-3 text-gray-700">{bid.product}</td>
                   <td className="px-4 py-3 text-gray-700">{bid.supplier}</td>
                   <td className="px-4 py-3 text-gray-700">{bid.fobCost}</td>

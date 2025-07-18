@@ -182,7 +182,7 @@ export default function CreateAuctionPage() {
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
         dimensions: lot.dimensions ? 
           `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` : 
-          '0x0x0'
+          undefined,
       })) || [],
     };
 
