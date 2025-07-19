@@ -71,13 +71,17 @@ export default function OtpModal({
   const handleResendOtp = async () => {
     setError('');
     try {
-      await fetch('https://ep-backend-j7fq.onrender.com/api/auth/resend-otp', {
+      console.log('Sending resend OTP request with email:', email);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
+      const data = await response.json();
+      console.log('Resend OTP response:', data);
       setResendTimer(30);
-    } catch {
+    } catch (err) {
+      console.log('Resend OTP request error:', err);
       setError('Failed to resend OTP');
     }
   };
