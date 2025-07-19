@@ -21,6 +21,8 @@ export default function AuctionCapacityModal({
   onSave,
   isReadOnly = false,
   isLiveAuction = false,
+  initialCurrency = 'USD',
+  initialFob = '',
 }: {
   auctionTitle: string;
   auctionTime: string;
@@ -28,16 +30,28 @@ export default function AuctionCapacityModal({
   initialCapacities?: Record<string, string>;
   open: boolean;
   onClose: () => void;
-  onSave: (capacities: Record<string, string>, editMode?: boolean) => void;
+  onSave: (capacities: Record<string, string>, editMode?: boolean, extra?: { currency: string; fob: string }) => void;
   isReadOnly?: boolean;
   isLiveAuction?: boolean;
+  initialCurrency?: string;
+  initialFob?: string;
 }) {
   const [capacities, setCapacities] = useState<Record<string, string>>({});
   const [agreed, setAgreed] = useState(false);
+  const [currency, setCurrency] = useState(initialCurrency);
+  const [fob, setFob] = useState(initialFob);
 
   useEffect(() => {
     setCapacities(initialCapacities);
   }, [initialCapacities]);
+
+  useEffect(() => {
+    setCurrency(initialCurrency);
+  }, [initialCurrency]);
+
+  useEffect(() => {
+    setFob(initialFob);
+  }, [initialFob]);
 
   // Debug logging
   useEffect(() => {
@@ -50,10 +64,12 @@ export default function AuctionCapacityModal({
         lots,
         initialCapacities,
         isReadOnly,
-        isLiveAuction
+        isLiveAuction,
+        initialCurrency,
+        initialFob,
       });
     }
-  }, [open, auctionTitle, auctionTime, lots, initialCapacities, isReadOnly, isLiveAuction]);
+  }, [open, auctionTitle, auctionTime, lots, initialCapacities, isReadOnly, isLiveAuction, initialCurrency, initialFob]);
 
   const handleChange = (lotId: string, value: string) => {
     setCapacities((prev) => ({ ...prev, [lotId]: value }));
@@ -62,7 +78,9 @@ export default function AuctionCapacityModal({
   const canSubmit =
     !isReadOnly &&
     agreed &&
-    lots.every((lot) => capacities[lot.lotId] && capacities[lot.lotId].trim() !== '');
+    lots.every((lot) => capacities[lot.lotId] && capacities[lot.lotId].trim() !== '') &&
+    currency &&
+    fob.trim() !== '';
 
   if (!open) return null;
 
@@ -71,32 +89,30 @@ export default function AuctionCapacityModal({
     new Map(lots.map((lot) => [lot.lotId, lot])).values()
   );
 
-
-
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center px-4">
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-8 py-7 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">{auctionTitle}</h2>
-          <p className="text-sm text-gray-500 mt-1">{auctionTime}</p>
+          <h2 className="text-xl font-semibold text-gray-800">{auctionTitle}</h2>
+          {/* <p className="text-sm text-gray-500 mt-1">{auctionTime}</p> */}
         </div>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (canSubmit) onSave(capacities);
+            if (canSubmit) onSave(capacities, false, { currency, fob });
           }}
         >
           <div className="space-y-6 mb-6">
             {uniqueLots.map((lot) => (
-              <div key={lot.lotId} className="border-b border-gray-200 pb-4">
+              <div key={lot.lotId}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-gray-700 mb-0.5">{lot.lotId}</p>
-                    <p className="text-sm text-gray-600 mb-1">{lot.name}</p>
-                    {lot.volume && (
+                    <p className="text-sm font-medium text-gray-700 mb-0.5">Lot - {lot.lotId}</p>
+                    <p className="text-xs text-gray-500 mb-1">Product: {lot.name}</p>
+                    {/* {lot.volume && (
                       <p className="text-xs text-gray-500 mb-1">Volume: {lot.volume}</p>
-                    )}
+                    )} */}
                   </div>
                   <div className="w-36">
                     <input
@@ -116,6 +132,36 @@ export default function AuctionCapacityModal({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Currency Dropdown */}
+          <div className="mb-4">
+            <label className="block text-xs font-semibold mb-1 text-gray-700">Currency</label>
+            <select
+              value={currency}
+              onChange={e => setCurrency(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none border-gray-300 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+              disabled={isReadOnly}
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="INR">INR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CNY">CNY</option>
+            </select>
+          </div>
+          {/* FOB Input */}
+          <div className="mb-6">
+            <label className="block text-xs font-semibold mb-1 text-gray-700">FOB Value</label>
+            <input
+              type="number"
+              value={fob}
+              onChange={e => setFob(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none border-gray-300 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+              placeholder="Enter FOB value"
+              readOnly={isReadOnly}
+            />
           </div>
 
           {!isReadOnly && (
@@ -145,7 +191,7 @@ export default function AuctionCapacityModal({
               <button
                 type="button"
                 className="px-5 py-2 rounded-md text-sm font-semibold text-blue-600 border border-blue-600 hover:bg-blue-50"
-                onClick={() => onSave(capacities, true)}
+                onClick={() => onSave(capacities, true, { currency, fob })}
               >
                 Edit Details
               </button>

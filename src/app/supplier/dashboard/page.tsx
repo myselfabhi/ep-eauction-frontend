@@ -18,6 +18,8 @@ type LotData = {
   material?: string;
   volume?: string;
   dimensions?: { l?: string; w?: string; h?: string };
+  fob?: string;
+  currency?: string;
 };
 
 // type BackendLot = {
@@ -80,7 +82,12 @@ function SupplierDashboardContent() {
     }
   }, [invited, router]);
 
-  const handleCapacitySave = (auctionId: string, capacities: Record<string, string>, editMode = false) => {
+  const handleCapacitySave = (
+    auctionId: string,
+    capacities: Record<string, string>,
+    editMode = false,
+    extra?: { currency?: string; fob?: string }
+  ) => {
     const isLive = auctions.find(a => a.id === auctionId)?.status === 'live';
     if (editMode) {
       setCapacityModalOpen({ auctionId, readOnly: false });
@@ -88,6 +95,11 @@ function SupplierDashboardContent() {
     }
     setAuctionDetails(prev => ({ ...prev, [auctionId]: { capacities, confirmed: !isLive } }));
     setCapacityModalOpen(null);
+    // Save FOB and currency to localStorage
+    if (extra && extra.fob && extra.currency) {
+      localStorage.setItem(`auction_fob_${auctionId}`, extra.fob);
+      localStorage.setItem(`auction_currency_${auctionId}`, extra.currency);
+    }
     if (isLive) setConfirmationData({ auctionId, capacities });
   };
 
@@ -201,11 +213,16 @@ function SupplierDashboardContent() {
                 {Object.entries(confirmationData.capacities).map(([lotId, value]) => {
                   const auction = auctions.find(a => a.id === confirmationData.auctionId);
                   const lot = auction?.lots?.find(l => l.lotId === lotId);
+                  // Read FOB and currency from localStorage
+                  const fob = typeof window !== 'undefined' ? localStorage.getItem(`auction_fob_${confirmationData.auctionId}`) : '';
+                  const currency = typeof window !== 'undefined' ? localStorage.getItem(`auction_currency_${confirmationData.auctionId}`) : '';
                   return (
                     <div key={lotId} className="text-sm text-gray-700 border-b border-gray-100 pb-2">
-                      <div className="font-semibold">{lotId}</div>
-                      <div className="text-gray-600">{lot?.name || 'Lot Details'}</div>
-                      <div className="text-gray-500">{value} cartons</div>
+                      <div className="font-semibold">Lot - {lotId}</div>
+                      <div className="text-gray-500">Product: {lot?.name || 'Lot Details'}</div>
+                      <div className="text-gray-500">Cartons: {value} </div>
+                      {fob && <div className="text-gray-500">FOB: {fob}</div>}
+                      {currency && <div className="text-gray-500">Currency: {currency}</div>}
                     </div>
                   );
                 })}
@@ -323,7 +340,7 @@ function SupplierDashboardContent() {
                           isReadOnly={capacityModalOpen.readOnly}
                           isLiveAuction={isLive}
                           onClose={() => setCapacityModalOpen(null)}
-                          onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
+                          onSave={(caps, editMode, extra) => handleCapacitySave(auction.id, caps, editMode, extra)}
                         />
                       )}
                     </div>
@@ -383,7 +400,7 @@ function SupplierDashboardContent() {
                           isReadOnly={capacityModalOpen.readOnly}
                           isLiveAuction={false}
                           onClose={() => setCapacityModalOpen(null)}
-                          onSave={(caps, editMode) => handleCapacitySave(auction.id, caps, editMode)}
+                          onSave={(caps, editMode, extra) => handleCapacitySave(auction.id, caps, editMode, extra)}
                         />
                       )}
                     </div>
