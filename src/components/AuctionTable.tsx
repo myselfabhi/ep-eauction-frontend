@@ -241,29 +241,57 @@ export default function AuctionTable({
                     </button>
                     {openAction === index && (
                       <div className="absolute top-full right-0 mt-2 w-48 bg-white border rounded shadow z-10">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log('✅ Edit clicked');
-                            setEditAuction(auction);
-                            setEditModalOpen(true);
-                            setOpenAction(null);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
-                        >
-                          <span>Edit Auction</span>
-                          <Image src="/icons/edit_pen.svg" alt="Edit Auction" width={16} height={16} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setOpenAction(null);
-                            router.push(ROUTES.COMMON.HOME);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
-                        >
-                          <span>Download Report</span>
-                          <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
-                        </button>
+                        {/* Show Edit Auction for Active and Scheduled only */}
+                        {(auction.status === 'Active' || auction.status === 'Scheduled') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('✅ Edit clicked');
+                              setEditAuction(auction);
+                              setEditModalOpen(true);
+                              setOpenAction(null);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
+                          >
+                            <span>Edit Auction</span>
+                            <Image src="/icons/edit_pen.svg" alt="Edit Auction" width={16} height={16} />
+                          </button>
+                        )}
+                        {/* Show Download Report for Ended only */}
+                        {auction.status === 'Ended' && (
+                          <button
+                            onClick={() => {
+                              setOpenAction(null);
+                              // Generate CSV with available auction details
+                              const csvRows = [
+                                ['Auction Title', 'Auction ID', 'Start Time', 'End Time', 'Status', 'Number of Lots', 'Number of Suppliers'],
+                                [
+                                  auction.title,
+                                  auction._id,
+                                  new Date(auction.startTime).toLocaleString(),
+                                  new Date(auction.endTime).toLocaleString(),
+                                  auction.status,
+                                  auction.lots?.length ?? 0,
+                                  auction.invitedSuppliers?.length ?? 0,
+                                ],
+                              ];
+                              const csvContent = csvRows.map(row => row.map(String).map(cell => '"' + cell.replace(/"/g, '""') + '"').join(',')).join('\n');
+                              const blob = new Blob([csvContent], { type: 'text/csv' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `auction-report-${auction.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              URL.revokeObjectURL(url);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center justify-between"
+                          >
+                            <span>Download Report</span>
+                            <Image src="/icons/save_file.svg" alt="Download Report" width={16} height={16} />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
