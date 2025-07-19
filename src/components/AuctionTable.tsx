@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { Auction } from '@/types/auction';
 import EditableReviewModal from './ui/modal/EditableReviewModal';
 import { auctionService } from '@/services';
-import { ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/lib';
 
 function getRemainingTime(endTime: string): string {
   const end = new Date(endTime).getTime();
@@ -42,7 +41,6 @@ export default function AuctionTable({
   auctions: Auction[];
   loading: boolean;
 }) {
-  const router = useRouter();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editAuction, setEditAuction] = useState<Auction | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
