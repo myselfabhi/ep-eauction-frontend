@@ -209,7 +209,7 @@ export default function EPMonitorAuctionPage() {
         )}
         <AuctionLotMonitorHeader
           auctionTitle={auction.title}
-          auctionCode={auction._id}
+          auctionCode={auction.auctionId}
           invitedSuppliersCount={auction.invitedSuppliers.length}
           status={auction.status === 'Active' ? 'Live' : auction.status}
           autoExtension={!!auction.autoExtension}

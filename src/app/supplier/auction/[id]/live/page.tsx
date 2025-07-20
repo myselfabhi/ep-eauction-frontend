@@ -198,7 +198,7 @@ export default function SupplierAuctionLivePage() {
           <div className="flex items-center gap-2 text-[13px] text-[#555] mb-[3px]">
             Auction ID:
             <span className="font-mono text-[13px] font-medium text-black">
-                AUC-{new Date().getFullYear()}-CC-{auctionData._id.slice(-3)}
+                {auctionData.auctionId}
             </span>
             <span className="mx-2 text-[#aaa]">|</span>
             <a className="text-blue-600 underline cursor-pointer font-medium" href="#">View details</a>

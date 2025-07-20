@@ -3,6 +3,7 @@ import { User } from "./user";
 
 export interface Auction {
   _id: string;
+  auctionId: string;
   title: string;
   description?: string;
   category?: string;
