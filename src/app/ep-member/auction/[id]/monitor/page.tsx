@@ -39,7 +39,9 @@ export default function EPMonitorAuctionPage() {
       try {
         setLoading(true);
         setError('');
+        console.log('[Auction Monitor] Fetching auction details for ID:', id);
         const auctionData = await fetchAuctionDetails(id as string);
+        console.log('[Auction Monitor] Auction details response:', auctionData);
         setAuction(auctionData);
         if (auctionData.lots && auctionData.lots.length > 0) {
           setSelectedLot(auctionData.lots[0]._id);
@@ -48,8 +50,11 @@ export default function EPMonitorAuctionPage() {
         const endTime = new Date(auctionData.endTime).getTime();
         setTimeRemaining(Math.max(0, Math.floor((endTime - now) / 1000)));
         setIsPaused(auctionData.status === 'Paused');
-        setRankedBids(await fetchAuctionRanking(id as string));
-      } catch {
+        const ranking = await fetchAuctionRanking(id as string);
+        console.log('[Auction Monitor] Auction ranking response:', ranking);
+        setRankedBids(ranking);
+      } catch (err) {
+        console.error('[Auction Monitor] Error loading auction data:', err);
         setError('Failed to load auction data');
       } finally {
         setLoading(false);
