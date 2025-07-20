@@ -75,6 +75,7 @@ import { getSocket, joinAuctionRoom, disconnectSocket } from '@/lib/socket';
 export default function SupplierAuctionLivePage() {
   const params = useParams();
   const auctionId = params.id as string;
+  const id = auctionId; // For localStorage key
   
   // Real auction data state
   const [auctionData, setAuctionData] = useState<Auction | null>(null);
@@ -86,6 +87,41 @@ export default function SupplierAuctionLivePage() {
   const [editBid, setEditBid] = useState<string | null>(null); // bid._id being edited
   const [editBidValue, setEditBidValue] = useState<string>('');
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Get modal values from localStorage
+  const getModalValues = () => {
+    if (typeof window === 'undefined') return null;
+    
+    console.log('🔍 Getting modal values for auction ID:', id);
+    
+    const fob = localStorage.getItem(`auction_fob_${id}`);
+    const currency = localStorage.getItem(`auction_currency_${id}`);
+    const cartonStr = localStorage.getItem(`auction_carton_${id}`);
+    
+    console.log('🔍 Raw localStorage values:');
+    console.log('  - FOB:', fob);
+    console.log('  - Currency:', currency);
+    console.log('  - Carton (string):', cartonStr);
+    
+    if (!fob || !currency || !cartonStr) {
+      console.log('❌ Missing required values in localStorage');
+      return null;
+    }
+    
+    try {
+      const carton = JSON.parse(cartonStr);
+      const result = {
+        fob: Number(fob),
+        currency,
+        carton
+      };
+      console.log('✅ Parsed modal values:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error parsing carton values from localStorage:', error);
+      return null;
+    }
+  };
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -243,22 +279,37 @@ export default function SupplierAuctionLivePage() {
     if (!auctionData || isPaused) return;
     setIsSubmitting(true);
     try {
+      const modalValues = getModalValues();
+      console.log('🔍 Modal Values:', modalValues);
+      console.log('🔍 Lot:', lot);
+      console.log('🔍 Bid Input:', bidInput[lot._id]);
+      
       const payload = {
         auctionId: auctionData._id,
         lotId: lot._id,
         amount: Number(bidInput[lot._id]),
-        currency: auctionData.currency,
-        fobCost: 0,
+        currency: modalValues?.currency || auctionData.currency,
+        fob: modalValues?.fob || 0,        // Only fob field - consistent with backend
+        carton: modalValues?.carton[lot.lotId || ''] || 0,
         tax: 0,
         duty: 0,
         performanceScore: 0,
       };
-      await bidService.create(payload);
+      
+      console.log('🚀 Sending Bid Payload:', payload);
+      console.log('🚀 Payload JSON:', JSON.stringify(payload, null, 2));
+      
+      const response = await bidService.create(payload);
+      console.log('✅ Bid Response:', response);
+      
       // Add the new bid to the table and fetch latest ranking
       await fetchRanking();
       setBidInput(prev => ({ ...prev, [lot._id]: '' }));
       setPlacingBid(null);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('❌ Bid Error Details:', err);
+      console.error('❌ Error Response:', err.response?.data);
+      console.error('❌ Error Status:', err.response?.status);
       alert('Failed to place bid.');
       console.error(err);
     } finally {
@@ -271,19 +322,34 @@ export default function SupplierAuctionLivePage() {
     if (isPaused) return;
     setIsSubmitting(true);
     try {
+      const modalValues = getModalValues();
+      console.log('🔍 Update - Modal Values:', modalValues);
+      console.log('🔍 Update - Current Bid:', bid);
+      console.log('🔍 Update - Edit Value:', editBidValue);
+      
       const payload = {
         amount: Number(editBidValue),
-        currency: bid.currency,
-        fobCost: bid.fobCost,
+        currency: modalValues?.currency || bid.currency,
+        fob: modalValues?.fob || bid.fob,        // Only fob field - consistent with backend
+        carton: modalValues?.carton[bid.lot || ''] || bid.carton,
         tax: bid.tax,
         duty: bid.duty,
         performanceScore: bid.performanceScore,
       };
-      await bidService.update(bid._id, payload);
+      
+      console.log('🚀 Sending Update Payload:', payload);
+      console.log('🚀 Update Payload JSON:', JSON.stringify(payload, null, 2));
+      
+      const response = await bidService.update(bid._id, payload);
+      console.log('✅ Update Response:', response);
+      
       await fetchRanking();
       setEditBid(null);
       setEditBidValue('');
-    } catch (err) {
+    } catch (err: any) {
+      console.error('❌ Update Error Details:', err);
+      console.error('❌ Update Error Response:', err.response?.data);
+      console.error('❌ Update Error Status:', err.response?.status);
       alert('Failed to update bid.');
       console.error(err);
     } finally {

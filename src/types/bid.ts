@@ -7,7 +7,8 @@ export interface Bid {
   supplier: string | User;  // Updated to handle both string and User object
   amount: number;
   currency: string;
-  fobCost: number;
+  fob: number;
+  carton: number;       // Added carton field
   tax: number;
   duty: number;
   totalCost: number;

@@ -93,14 +93,21 @@ function SupplierDashboardContent() {
       setCapacityModalOpen({ auctionId, readOnly: false });
       return;
     }
-    setAuctionDetails(prev => ({ ...prev, [auctionId]: { capacities, confirmed: !isLive } }));
-    setCapacityModalOpen(null);
-    // Save FOB and currency to localStorage
+    
+    // Save all values to localStorage
     if (extra && extra.fob && extra.currency) {
       localStorage.setItem(`auction_fob_${auctionId}`, extra.fob);
       localStorage.setItem(`auction_currency_${auctionId}`, extra.currency);
+      localStorage.setItem(`auction_carton_${auctionId}`, JSON.stringify(capacities));
     }
-    if (isLive) setConfirmationData({ auctionId, capacities });
+    
+    setAuctionDetails(prev => ({ ...prev, [auctionId]: { capacities, confirmed: !isLive } }));
+    setCapacityModalOpen(null);
+    
+    // If it's a live auction, redirect directly to live auction page
+    if (isLive) {
+      router.push(`/supplier/auction/${auctionId}/live`);
+    }
   };
 
   const handleConfirmAndEnter = async () => {
