@@ -1,9 +1,10 @@
 import { User } from './user';
+import { Lot } from './lot';
 
 export interface Bid {
   _id: string;
   auction: string;      // or Auction
-  lot?: string;         // or Lot
+  lot?: string | Lot;   // or Lot
   supplier: string | User;  // Updated to handle both string and User object
   amount: number;
   currency: string;

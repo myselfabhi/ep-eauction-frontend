@@ -306,10 +306,7 @@ export default function SupplierAuctionLivePage() {
       await fetchRanking();
       setBidInput(prev => ({ ...prev, [lot._id]: '' }));
       setPlacingBid(null);
-    } catch (err: any) {
-      console.error('❌ Bid Error Details:', err);
-      console.error('❌ Error Response:', err.response?.data);
-      console.error('❌ Error Status:', err.response?.status);
+    } catch (err) {
       alert('Failed to place bid.');
       console.error(err);
     } finally {
@@ -330,8 +327,10 @@ export default function SupplierAuctionLivePage() {
       const payload = {
         amount: Number(editBidValue),
         currency: modalValues?.currency || bid.currency,
-        fob: modalValues?.fob || bid.fob,        // Only fob field - consistent with backend
-        carton: modalValues?.carton[bid.lot || ''] || bid.carton,
+        fob: modalValues?.fob || bid.fob, // Only fob field - consistent with backend
+        carton: modalValues?.carton?.[
+          (bid.lot && typeof bid.lot === 'object' && 'lotId' in bid.lot && bid.lot.lotId) ? bid.lot.lotId : ''
+        ] ?? bid.carton,
         tax: bid.tax,
         duty: bid.duty,
         performanceScore: bid.performanceScore,
@@ -346,10 +345,7 @@ export default function SupplierAuctionLivePage() {
       await fetchRanking();
       setEditBid(null);
       setEditBidValue('');
-    } catch (err: any) {
-      console.error('❌ Update Error Details:', err);
-      console.error('❌ Update Error Response:', err.response?.data);
-      console.error('❌ Update Error Status:', err.response?.status);
+    } catch (err) {
       alert('Failed to update bid.');
       console.error(err);
     } finally {
@@ -433,13 +429,21 @@ export default function SupplierAuctionLivePage() {
                 {activeBids.map((bid, idx) => (
                   <React.Fragment key={bid._id}>
                     <tr className={`border-b border-[#f1f1f1] ${bid.status === 'Active' ? '' : 'bg-gray-100'}`}>
-                      <td className={tdBase + ' font-semibold'}>
-                        <span className={`inline-block w-4 h-4 rounded-full mr-1 align-middle ${bid.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        {auctionData?.lots.find(l => l._id === bid.lot)?.lotId || bid.lot}
-                      </td>
-                      <td className={tdBase}>{auctionData?.lots.find(l => l._id === bid.lot)?.name || ''}</td>
-                      <td className={tdBase}>{auctionData?.lots.find(l => l._id === bid.lot)?.volume || ''}</td>
-                      <td className={tdBase}>{new Date(bid.updatedAt).toLocaleString()}</td>
+                      {(() => {
+                        // Find the lot associated with this bid
+                        const lot = auctionData?.lots.find(l => l._id === bid.lot);
+                        return (
+                          <>
+                            <td className={tdBase + ' font-semibold'}>
+                              <span className={`inline-block w-4 h-4 rounded-full mr-1 align-middle ${bid.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                              {lot?.lotId || (typeof bid.lot === 'string' ? bid.lot : '')}
+                            </td>
+                            <td className={tdBase}>{lot?.name || ''}</td>
+                            <td className={tdBase}>{lot?.volume ?? ''}</td>
+                            <td className={tdBase}>{new Date(bid.updatedAt).toLocaleString()}</td>
+                          </>
+                        );
+                      })()}
                       <td className={tdBase + ' ' + tdRank} style={{ color: idx === 0 ? '#2b9500' : '#e53935' }}>
                         #{idx + 1}
                       </td>

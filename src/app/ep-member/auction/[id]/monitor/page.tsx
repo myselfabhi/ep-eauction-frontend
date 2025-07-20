@@ -16,6 +16,7 @@ import Loader from '@/components/shared/Loader';
 import DashboardLayout from '@/components/shared/DashboardLayout';
 import AuctionLotSummaryTable, { BidRowData } from '@/components/AuctionMonitor/AuctionLotSummaryTable';
 import AuctionLotMonitorHeader from '@/components/AuctionMonitor/AuctionLotMonitorHeader';
+import { Lot } from '@/types/lot';
 
 export default function EPMonitorAuctionPage() {
   const { id } = useParams();
@@ -157,15 +158,17 @@ export default function EPMonitorAuctionPage() {
   function getFilteredBids(): BidRowData[] {
     if (!auction) return [];
     return rankedBids.map((bid, idx) => {
-      const lotObj = auction.lots.find(l => l._id === bid.lot);
+      // Type guard to check if lot is an object
+      const isLotObject = bid.lot && typeof bid.lot === 'object' && 'lotId' in bid.lot;
+      
       return {
         id: bid._id,
         rank: idx + 1,
-        lotId: lotObj?.lotId ?? '', // Use the human-readable lotId
-        product: lotObj?.name ?? '',
+        lotId: isLotObject ? (bid.lot as Lot).lotId || '' : '',
+        product: isLotObject ? (bid.lot as Lot).name : '',
         supplier: getSupplierName(bid.supplier),
-        fobCost: `${auction.currency} ${bid.fobCost?.toFixed(2) ?? '--'}`,
-        freight: `${auction.currency} ${bid.freight?.toFixed(2) ?? '--'}`,
+        fobCost: `${auction.currency} ${bid.fob?.toFixed(2) ?? '--'}`,
+        freight: `${auction.currency} ${bid.carton?.toFixed(2) ?? '--'}`,
         duty: typeof bid.duty === 'number' ? `${bid.duty.toFixed(0)}%` : '--',
         landedCost: Number(bid.totalCost),
         bidTime: new Date(bid.updatedAt).toLocaleTimeString(),
