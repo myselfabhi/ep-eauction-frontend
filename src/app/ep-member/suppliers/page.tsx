@@ -48,11 +48,7 @@ export default function SuppliersPage() {
       });
   }, []);
 
-  const handleDeleteSupplier = (id: string) => {
-    if (confirm('Are you sure you want to delete this supplier?')) {
-      setSuppliers(suppliers.filter((s) => s._id !== id));
-    }
-  };
+
 
   return (
     <DashboardLayout>
