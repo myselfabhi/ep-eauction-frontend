@@ -126,6 +126,22 @@ export default function SupplierAuctionLivePage() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Show modal only if any of the required values are missing in localStorage
+  useEffect(() => {
+    if (!auctionId) return;
+    const fob = localStorage.getItem(`auction_fob_${auctionId}`);
+    const carton = localStorage.getItem(`auction_carton_${auctionId}`);
+    const currency = localStorage.getItem(`auction_currency_${auctionId}`);
+    console.log('[Modal Check] fob:', fob, 'carton:', carton, 'currency:', currency);
+    if (!fob || !carton || !currency) {
+      setModalOpen(true);
+      console.log('[Modal Check] Modal will open because at least one value is missing.');
+    } else {
+      setModalOpen(false);
+      console.log('[Modal Check] Modal will NOT open, all values present.');
+    }
+  }, [auctionId]);
+
   // New: Track bid input state
   const [bidInput, setBidInput] = useState<{ [lotId: string]: string }>({});
   const [placingBid, setPlacingBid] = useState<string | null>(null);
