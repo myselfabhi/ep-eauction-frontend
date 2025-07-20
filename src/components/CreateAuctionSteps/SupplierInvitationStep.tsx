@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { X, User2, Pencil, Save, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import axios from "axios";
 
 export type Supplier = {
   _id: string;
@@ -35,9 +36,24 @@ export default function SupplierInvitationStep({
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [previewValue, setPreviewValue] = useState(data.previewEmail || "");
+  const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suppliers = data.suppliers || [];
+
+  useEffect(() => {
+    // Fetch all suppliers from backend
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/supplier/allsupplier`;
+    axios.get(url)
+      .then(res => {
+        setAllSuppliers(res.data || []);
+        console.log("Fetched suppliers:", res.data);
+      })
+      .catch((err) => {
+        setAllSuppliers([]);
+        console.error("Error fetching suppliers:", err);
+      });
+  }, []);
 
   const handleAdd = (email: string) => {
     const cleaned = email.trim();
@@ -82,6 +98,12 @@ export default function SupplierInvitationStep({
   const handleSaveClick = () => {
     setEditMode(false);
     onChange({ suppliers, previewEmail: previewValue });
+  };
+
+  const handleDropdownSelect = (supplier: Supplier) => {
+    if (!suppliers.some((s) => s._id === supplier._id)) {
+      onChange({ suppliers: [...suppliers, supplier], previewEmail: previewValue });
+    }
   };
 
   return (
@@ -151,18 +173,31 @@ export default function SupplierInvitationStep({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="w-full flex justify-between items-center border border-[#DDE1EB] px-3 py-2 rounded-lg bg-white text-sm transition cursor-not-allowed opacity-70"
-                  disabled
+                  className="w-full flex justify-between items-center border border-[#DDE1EB] px-3 py-2 rounded-lg bg-white text-sm transition"
                 >
                   <span>Select from supplier list</span>
                   <ChevronDown className="ml-2 w-4 h-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              {/* Content is not needed as dropdown is visually disabled */}
               <DropdownMenuContent>
-                <DropdownMenuItem disabled>
-                  No supplier list (demo)
-                </DropdownMenuItem>
+                {allSuppliers.length === 0 ? (
+                  <DropdownMenuItem disabled>No suppliers found</DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem disabled>
+                      {`Suppliers found: ${allSuppliers.length}`}
+                    </DropdownMenuItem>
+                    {allSuppliers.map((supplier) => (
+                      <DropdownMenuItem
+                        key={supplier._id}
+                        onSelect={() => handleDropdownSelect(supplier)}
+                        disabled={suppliers.some((s) => s._id === supplier._id)}
+                      >
+                        {supplier.email}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
