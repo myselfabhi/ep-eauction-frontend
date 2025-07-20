@@ -149,19 +149,13 @@ export default function CreateAuctionPage() {
     setLoading(true);
     const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots, previewEmail } = auctionData;
 
-    // Prepare invitedSuppliers array with mixed user IDs and emails
-    const invitedSuppliers = supplierObjects.map(s => {
-      // If it's a valid MongoDB ObjectId (24 characters), use as is
-      if (s._id && s._id.length === 24 && /^[0-9a-fA-F]{24}$/.test(s._id)) {
-        return s._id.trim();
-      }
-      // Otherwise, use the email (for new suppliers)
-      return s.email;
-    });
+    // Prepare invitedSuppliers array with only emails (never ObjectIds)
+    const invitedSuppliers = supplierObjects.map(s => s.email);
 
     // Validate required fields
     if (!title || !description || !category || !currency || !startTime || !endTime) {
       alert('Please fill in all required fields.');
+      setLoading(false);
       return;
     }
 
@@ -199,7 +193,6 @@ export default function CreateAuctionPage() {
 
     try {
       console.log('Sending payload:', JSON.stringify(payload, null, 2));
-      
       const data = await auctionService.create(payload as unknown as Partial<Auction>);
       console.log('Auction created:', data);
 
@@ -213,27 +206,11 @@ export default function CreateAuctionPage() {
       console.error('API Error:', error);
       // Enhanced backend error logging
       if (typeof error === 'object' && error && 'response' in error) {
-        if (typeof error === 'object' && error && 'response' in error) {
-          const err = error as {
-            response: {
-              data?: unknown;
-              status?: number;
-              headers?: unknown;
-            };
-          };
-          console.error('Backend response data:', err.response.data);
-          console.error('Backend response status:', err.response.status);
-          console.error('Backend response headers:', err.response.headers);
-        }
-      }
-      const apiError = error as { response?: { status?: number; data?: { message?: string } } };
-      
-      if (apiError?.response?.status === 401) {
-        alert(ERROR_MESSAGES.AUTH.UNAUTHORIZED);
-        router.push(ROUTES.AUTH.LOGIN);
-      } else {
+        const apiError = error as { response?: { data?: { message?: string } } };
         const message = apiError?.response?.data?.message || ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
         alert(`Auction creation failed: ${message}`);
+      } else {
+        alert('Auction creation failed.');
       }
     }
   };
