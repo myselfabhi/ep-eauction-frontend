@@ -25,15 +25,6 @@ type SupplierInvitationStepProps = {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const DEFAULT_PREVIEW = `Dear Supplier,
-
-You are invited to participate in our upcoming reverse auction for Q1 2025 Raw Materials Procurement. This auction includes multiple LOTs covering various materials and components.
-
-Please review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.
-
-Best regards,
-Procurement Team`;
-
 export default function SupplierInvitationStep({
   data,
   onChange,
@@ -42,7 +33,7 @@ export default function SupplierInvitationStep({
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
-  const [previewValue, setPreviewValue] = useState(data.previewEmail || DEFAULT_PREVIEW);
+  const [previewValue, setPreviewValue] = useState(data.previewEmail || "");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suppliers = data.suppliers || [];
@@ -63,7 +54,7 @@ export default function SupplierInvitationStep({
       _id: cleaned,
       email: cleaned,
     };
-    onChange({ suppliers: [...suppliers, newSupplier] });
+    onChange({ suppliers: [...suppliers, newSupplier], previewEmail: previewValue });
     setInput("");
     inputRef.current?.focus();
   };
@@ -80,6 +71,7 @@ export default function SupplierInvitationStep({
   const handleRemove = (email: string) => {
     onChange({
       suppliers: suppliers.filter((s) => s.email !== email),
+      previewEmail: previewValue,
     });
     inputRef.current?.focus();
   };
@@ -88,7 +80,7 @@ export default function SupplierInvitationStep({
 
   const handleSaveClick = () => {
     setEditMode(false);
-    onChange({ previewEmail: previewValue });
+    onChange({ suppliers, previewEmail: previewValue });
   };
 
   return (
@@ -222,7 +214,15 @@ export default function SupplierInvitationStep({
                 className="text-green-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-green-200 hover:bg-green-50"
                 onClick={handleSaveClick}
               >
-                <Save size={14} /> Save
+                <Save size={14} /> Done
+              </button>
+            ) : !previewValue ? (
+              <button
+                type="button"
+                className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                onClick={handleEditClick}
+              >
+                <Pencil size={14} /> Add
               </button>
             ) : (
               <button
@@ -249,6 +249,9 @@ export default function SupplierInvitationStep({
               tabIndex={-1}
               style={{ minHeight: "240px", height: "100%", width: "100%" }}
             />
+          )}
+          {showErrors && !previewValue && (
+            <span className="text-xs text-red-500 mt-1">Email preview is required</span>
           )}
         </div>
       </div>

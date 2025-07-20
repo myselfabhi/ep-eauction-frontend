@@ -188,19 +188,12 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
         <textarea
           className="w-full border border-[#DDE1EB] px-3 py-2 rounded-xl text-[15px] min-h-[110px] bg-white"
           style={{ fontFamily: "inherit" }}
-          value={
-            data.previewEmail ||
-            `Dear Supplier,
-
-You are invited to participate in our upcoming reverse auction. This auction includes multiple LOTs covering various materials and components.
-
-Please review the detailed specifications and submit your competitive bids within the auction timeline. All technical requirements and evaluation criteria are outlined in the attached documentation.
-
-Best regards,
-Procurement Team`
-          }
+          value={data.previewEmail || ""}
           readOnly
         />
+        {!data.previewEmail && (
+          <div className="text-xs text-red-500 mt-1">No email preview set.</div>
+        )}
       </Card>
     </div>
   );

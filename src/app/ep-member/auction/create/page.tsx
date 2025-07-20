@@ -143,7 +143,7 @@ export default function CreateAuctionPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots } = auctionData;
+    const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots, previewEmail } = auctionData;
 
     // Prepare invitedSuppliers array with mixed user IDs and emails
     const invitedSuppliers = supplierObjects.map(s => {
@@ -161,6 +161,11 @@ export default function CreateAuctionPage() {
       return;
     }
 
+    // Construct redirect URL for supplier invitation
+    const redirectUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/supplier/dashboard`
+      : '/supplier/dashboard';
+
     const payload = {
       title: title.trim(),
       description: description.trim(),
@@ -176,14 +181,16 @@ export default function CreateAuctionPage() {
       lots: lots?.map(lot => ({
         lotId: lot.lotId || 'LOT001',
         productName: lot.productName || 'Product',
-        hsCode: lot.hsCode && lot.hsCode.trim() !== '' ? lot.hsCode : '123', // Default to '123' if missing/null/empty
+        hsCode: lot.hsCode && lot.hsCode.trim() !== '' ? lot.hsCode : '123',
         material: lot.material || 'Material',
         volume: lot.volume || '0',
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
-        dimensions: lot.dimensions ? 
-          `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` : 
+        dimensions: lot.dimensions ?
+          `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` :
           undefined,
       })) || [],
+      previewEmail: previewEmail || '',
+      redirectUrl,
     };
 
     try {
