@@ -62,8 +62,13 @@ export default function SupplierInvitationStep({
       setError("Invalid email address");
       return;
     }
-    if (suppliers.some((s) => s.email === cleaned)) {
-      setError("Email already added");
+    if (suppliers.some((s) => s.email.toLowerCase() === cleaned.toLowerCase())) {
+      setError("Supplier already added.");
+      return;
+    }
+    // Check if email is already present in the dropdown (i.e., in allSuppliers)
+    if (allSuppliers.some((s) => s.email.toLowerCase() === cleaned.toLowerCase())) {
+      setError("This supplier is already registered. Please select from the dropdown.");
       return;
     }
     setError("");
@@ -101,9 +106,12 @@ export default function SupplierInvitationStep({
   };
 
   const handleDropdownSelect = (supplier: Supplier) => {
-    if (!suppliers.some((s) => s._id === supplier._id)) {
-      onChange({ suppliers: [...suppliers, supplier], previewEmail: previewValue });
+    if (suppliers.some((s) => s.email.toLowerCase() === supplier.email.toLowerCase())) {
+      setError("Supplier already added.");
+      return;
     }
+    setError("");
+    onChange({ suppliers: [...suppliers, supplier], previewEmail: previewValue });
   };
 
   return (
@@ -281,15 +289,25 @@ export default function SupplierInvitationStep({
               </button>
             )}
           </div>
-          <textarea
-            className={`w-full border ${editMode ? 'border-blue-300 bg-white' : 'border-none bg-transparent p-0'} rounded-lg px-3 py-2 text-[15px] leading-relaxed resize-y overflow-hidden focus:ring-2 focus:ring-blue-200 outline-none`}
-            value={previewValue}
-            onChange={e => setPreviewValue(e.target.value)}
-            readOnly={!editMode}
-            tabIndex={editMode ? 0 : -1}
-            rows={1}
-            autoFocus={editMode}
-          />
+          {editMode ? (
+            <textarea
+              className="w-full border border-[#DDE1EB] rounded px-2 py-2 text-[15px] focus:border-[#1AAB74] focus:outline-none"
+              style={{ minHeight: 150 }}
+              value={previewValue}
+              onChange={(e) => setPreviewValue(e.target.value)}
+              autoFocus
+            />
+          ) : (
+            <textarea
+              className={`w-full border ${editMode ? 'border-blue-300 bg-white' : 'border-none bg-transparent p-0'} rounded-lg px-3 py-2 text-[15px] leading-relaxed resize-y overflow-hidden focus:ring-2 focus:ring-blue-200 outline-none`}
+              value={previewValue}
+              onChange={e => setPreviewValue(e.target.value)}
+              readOnly={!editMode}
+              tabIndex={editMode ? 0 : -1}
+              rows={1}
+              autoFocus={editMode}
+            />
+          )}
           {showErrors && !previewValue && (
             <span className="text-xs text-red-500 mt-1">Email preview is required</span>
           )}

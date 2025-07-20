@@ -14,6 +14,7 @@ import Loader from '@/components/shared/Loader';
 import { auctionService, dutyService } from '@/services';
 import { ROUTES, ERROR_MESSAGES } from '@/lib';
 import { Auction } from '@/types/auction';
+import ModalWrapper from '@/components/ui/modal/ModalWrapper';
 
 type Product = { _id: string; name: string; hsCode?: string };
 
@@ -67,6 +68,8 @@ export default function CreateAuctionPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showErrors, setShowErrors] = useState<boolean>(false);
   const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -142,7 +145,7 @@ export default function CreateAuctionPage() {
 
   const saveDraft = () => {
     localStorage.setItem('auctionDraft', JSON.stringify(auctionData));
-    alert('Draft saved!');
+    setShowDraftModal(true);
   };
 
   const handleSubmit = async () => {
@@ -197,10 +200,10 @@ export default function CreateAuctionPage() {
       console.log('Auction created:', data);
 
       setLoading(false);
-      alert('Auction created successfully!');
+      setShowSuccessModal(true);
       localStorage.removeItem('auctionStep');
       localStorage.removeItem('auctionDraft');
-      router.push(ROUTES.EP_MEMBER.DASHBOARD);
+      // router.push(ROUTES.EP_MEMBER.DASHBOARD); // Move this to modal button
     } catch (error: unknown) {
       setLoading(false);
       console.error('API Error:', error);
@@ -282,6 +285,28 @@ export default function CreateAuctionPage() {
         <ConfirmLaunchModal open={showLaunchModal} onClose={() => setShowLaunchModal(false)} onConfirm={() => { setShowLaunchModal(false); handleSubmit(); }} />
         {loading && <Loader />}
       </main>
+      <ModalWrapper open={showSuccessModal} onClose={() => { setShowSuccessModal(false); router.push(ROUTES.EP_MEMBER.DASHBOARD); }}>
+        <div className="text-center">
+          <div className="text-lg font-semibold mb-2">Auction created successfully!</div>
+          <button
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded text-sm"
+            onClick={() => { setShowSuccessModal(false); router.push(ROUTES.EP_MEMBER.DASHBOARD); }}
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </ModalWrapper>
+      <ModalWrapper open={showDraftModal} onClose={() => setShowDraftModal(false)} title="Draft Saved!">
+        <div className="text-center">
+          <div className="text-lg font-semibold mb-2">Your draft has been saved.</div>
+          <button
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded text-sm"
+            onClick={() => setShowDraftModal(false)}
+          >
+            Close
+          </button>
+        </div>
+      </ModalWrapper>
     </div>
   );
 }
