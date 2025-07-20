@@ -24,6 +24,7 @@ type SupplierInvitationStepProps = {
 };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const defaultMessage = `Dear Supplier,\n\nWe are excited to invite you to participate in our upcoming auction on the EP Auction Platform.\n\nThis auction includes several LOTs for raw materials and components, and we welcome your competitive bids.\n\nPlease log in to your EP Auction account to view the auction details, specifications, and timelines.\n\nWe look forward to your participation and wish you success in the bidding process.\n\nBest regards,  \nEP Auction Team`;
 
 export default function SupplierInvitationStep({
   data,
@@ -208,23 +209,7 @@ export default function SupplierInvitationStep({
         <div className="border border-[#E1E6F0] rounded-xl bg-[#FCFCFD] px-5 py-5 flex flex-col h-full">
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium text-[15px]">Email Preview</span>
-            {editMode ? (
-              <button
-                type="button"
-                className="text-green-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-green-200 hover:bg-green-50"
-                onClick={handleSaveClick}
-              >
-                <Save size={14} /> Done
-              </button>
-            ) : !previewValue ? (
-              <button
-                type="button"
-                className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
-                onClick={handleEditClick}
-              >
-                <Pencil size={14} /> Add
-              </button>
-            ) : (
+            {!editMode && previewValue && (
               <button
                 type="button"
                 className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
@@ -233,23 +218,43 @@ export default function SupplierInvitationStep({
                 <Pencil size={14} /> Edit
               </button>
             )}
+            {!editMode && !previewValue && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                  onClick={() => { setPreviewValue(""); setEditMode(true); }}
+                >
+                  <Pencil size={14} /> Add
+                </button>
+                <button
+                  type="button"
+                  className="text-blue-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                  onClick={() => { setPreviewValue(defaultMessage); setEditMode(true); }}
+                >
+                  <Pencil size={14} /> Add Drafted Message
+                </button>
+              </div>
+            )}
+            {editMode && (
+              <button
+                type="button"
+                className="text-green-700 flex items-center gap-1 text-xs px-3 py-1 rounded border border-green-200 hover:bg-green-50"
+                onClick={handleSaveClick}
+              >
+                <Save size={14} /> Done
+              </button>
+            )}
           </div>
-          {editMode ? (
-            <textarea
-              className="w-full border border-blue-300 rounded-lg bg-white px-3 py-2 text-[15px] leading-relaxed min-h-[240px] resize-y focus:ring-2 focus:ring-blue-200 outline-none"
-              value={previewValue}
-              onChange={e => setPreviewValue(e.target.value)}
-              autoFocus
-            />
-          ) : (
-            <textarea
-              className="w-full border-none bg-transparent p-0 text-[15px] leading-relaxed min-h-[240px] resize-none focus:ring-0 focus:outline-none"
-              value={previewValue}
-              readOnly
-              tabIndex={-1}
-              style={{ minHeight: "240px", height: "100%", width: "100%" }}
-            />
-          )}
+          <textarea
+            className={`w-full border ${editMode ? 'border-blue-300 bg-white' : 'border-none bg-transparent p-0'} rounded-lg px-3 py-2 text-[15px] leading-relaxed resize-y overflow-hidden focus:ring-2 focus:ring-blue-200 outline-none`}
+            value={previewValue}
+            onChange={e => setPreviewValue(e.target.value)}
+            readOnly={!editMode}
+            tabIndex={editMode ? 0 : -1}
+            rows={1}
+            autoFocus={editMode}
+          />
           {showErrors && !previewValue && (
             <span className="text-xs text-red-500 mt-1">Email preview is required</span>
           )}

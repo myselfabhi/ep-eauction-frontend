@@ -116,6 +116,10 @@ export default function CreateAuctionPage() {
       const lots = auctionData.lots || [];
       return lots.length > 0 && lots.every(lot => lot.productName?.trim() && lot.volume?.trim());
     }
+    if (step === 3) {
+      // Require previewEmail to be present and not empty
+      if (!auctionData.previewEmail || auctionData.previewEmail.trim() === "") return false;
+    }
     const required = requiredFieldsPerStep[step] || [];
     return required.every(field => {
       const value = auctionData[field];
