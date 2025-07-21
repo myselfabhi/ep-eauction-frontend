@@ -17,6 +17,7 @@ import DashboardLayout from '@/components/shared/DashboardLayout';
 import AuctionLotSummaryTable, { BidRowData } from '@/components/AuctionMonitor/AuctionLotSummaryTable';
 import AuctionLotMonitorHeader from '@/components/AuctionMonitor/AuctionLotMonitorHeader';
 import { Lot } from '@/types/lot';
+import ModalWrapper from '@/components/ui/modal/ModalWrapper';
 
 export default function EPMonitorAuctionPage() {
   const { id } = useParams();
@@ -32,6 +33,7 @@ export default function EPMonitorAuctionPage() {
   const [error, setError] = useState<string>('');
   const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showSupplierListModal, setShowSupplierListModal] = useState<boolean>(false);
 
   useEffect(() => {
     const loadAuctionData = async () => {
@@ -228,7 +230,7 @@ export default function EPMonitorAuctionPage() {
           isActionLoading={isActionLoading}
           timeRemaining={timeRemaining}
           onViewDetails={() => {}}
-          onViewSuppliers={() => {}}
+          onViewSuppliers={() => setShowSupplierListModal(true)}
         />
 
         <AuctionLotSummaryTable
@@ -258,6 +260,45 @@ export default function EPMonitorAuctionPage() {
             {error}
           </div>
         )}
+
+        {/* Supplier List Modal */}
+        <ModalWrapper open={showSupplierListModal} onClose={() => setShowSupplierListModal(false)}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Invited Supplier Emails</label>
+            {(() => {
+              // Type guard for invitedSupplierEmail
+              type AuctionWithOptionalEmails = Auction & { invitedSupplierEmail?: string[] };
+              const auctionTyped = auction as AuctionWithOptionalEmails;
+              let supplierEmails: string[];
+              if (Array.isArray(auctionTyped.invitedSupplierEmail)) {
+                supplierEmails = auctionTyped.invitedSupplierEmail;
+              } else {
+                // Map invitedSuppliers to string[] (handle User[] or string[])
+                supplierEmails = (auctionTyped.invitedSuppliers as (string | { email?: string })[]).map(s =>
+                  typeof s === 'string' ? s : s.email || ''
+                ).filter(Boolean);
+              }
+              return (
+                <ul
+                  className="border border-gray-300 rounded px-3 py-2 bg-white"
+                  style={{ maxHeight: '180px', overflowY: 'auto', minHeight: '40px' }}
+                >
+                  {supplierEmails.map((email, idx) => (
+                    <li key={idx} className="py-1 list-disc list-inside text-[15px] text-gray-800">
+                      {email}
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
+          </div>
+          <button
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded text-sm"
+            onClick={() => setShowSupplierListModal(false)}
+          >
+            Close
+          </button>
+        </ModalWrapper>
 
         <div ref={bottomRef} />
       </div>
