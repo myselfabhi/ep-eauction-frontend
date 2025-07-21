@@ -36,8 +36,8 @@ export default function AuctionLotMonitorHeader({
   isPaused,
   isActionLoading,
   timeRemaining,
-  onViewDetails,
-  onViewSuppliers,
+  // onViewDetails,
+  // onViewSuppliers,
 }: Props) {
   return (
     <div
@@ -54,6 +54,7 @@ export default function AuctionLotMonitorHeader({
             <span className="font-medium text-gray-900">Auction ID:</span> {auctionCode}
           </span>
           <span className="text-gray-300 font-normal select-none">|</span>
+          {/*
           <button
             type="button"
             className="text-blue-600 underline underline-offset-2 font-medium hover:text-blue-700 px-0"
@@ -62,6 +63,7 @@ export default function AuctionLotMonitorHeader({
           >
             View details
           </button>
+          */}
         </div>
 
         {/* Info grid */}
@@ -70,6 +72,7 @@ export default function AuctionLotMonitorHeader({
             <span className="text-gray-500 block mb-1">Invited suppliers</span>
             <span className="font-medium text-gray-900">
               {invitedSuppliersCount}{' '}
+              {/*
               <button
                 type="button"
                 className="text-blue-600 underline underline-offset-2 ml-1 font-normal"
@@ -78,6 +81,7 @@ export default function AuctionLotMonitorHeader({
               >
                 View list
               </button>
+              */}
             </span>
           </div>
           <div>

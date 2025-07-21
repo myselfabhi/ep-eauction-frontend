@@ -1,34 +1,34 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 
-const notifications = [
-  {
-    id: 1,
-    title: "Food Service Paper... has started",
-    link: "Monitor",
-    linkUrl: "#",
-    time: "5m",
-    icon: "/icons/dvr.svg",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "24 supplier has joined",
-    subtitle: "Food Service Paper Cups - Q2",
-    time: "1h",
-    icon: "/icons/group_nots.svg",
-    unread: false,
-  },
-  {
-    id: 3,
-    title: "Auction ‘Q1 Office Supplies’ has ended",
-    time: "2h",
-    icon: "/icons/dvr.svg",
-    unread: false,
-  },
-];
+// const notifications = [
+//   {
+//     id: 1,
+//     title: "Food Service Paper... has started",
+//     link: "Monitor",
+//     linkUrl: "#",
+//     time: "5m",
+//     icon: "/icons/dvr.svg",
+//     unread: true,
+//   },
+//   {
+//     id: 2,
+//     title: "24 supplier has joined",
+//     subtitle: "Food Service Paper Cups - Q2",
+//     time: "1h",
+//     icon: "/icons/group_nots.svg",
+//     unread: false,
+//   },
+//   {
+//     id: 3,
+//     title: "Auction ‘Q1 Office Supplies’ has ended",
+//     time: "2h",
+//     icon: "/icons/dvr.svg",
+//     unread: false,
+//   },
+// ];
 
 export default function NotificationDropdown({ open, onClose }: { open: boolean, onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -44,6 +44,8 @@ export default function NotificationDropdown({ open, onClose }: { open: boolean,
 
   if (!open) return null;
 
+  // Comment out the original dropdown and show 'Coming soon'
+  /*
   return (
     <div
       ref={ref}
@@ -91,6 +93,16 @@ export default function NotificationDropdown({ open, onClose }: { open: boolean,
           </div>
         ))}
       </div>
+    </div>
+  );
+  */
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 mt-2 z-50 w-96 bg-white rounded-xl border border-border shadow-xl flex items-center justify-center"
+      style={{ boxShadow: '0 8px 24px 0 rgba(16,30,54,0.14)', minHeight: 120 }}
+    >
+      <span className="text-lg text-gray-500 font-semibold">Coming soon</span>
     </div>
   );
 }
