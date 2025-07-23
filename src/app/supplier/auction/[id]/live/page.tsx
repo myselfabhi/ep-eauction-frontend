@@ -225,6 +225,26 @@ export default function SupplierAuctionLivePage() {
     fetchRanking();
   }, [auctionId, fetchRanking]);
 
+  const gbpRates: Record<string, number> = {
+    GBP: 1,
+    USD: 1.35,
+    CNY: 9.71,
+    VND: 35364.06,
+    TRY: 54.72,
+    EUR: 1.15,
+    INR: 116.79,
+  };
+
+  function convertCurrency(amount: number, from: string, to: string): number {
+    if (from === to) return amount;
+    const rateFrom = gbpRates[from];
+    const rateTo = gbpRates[to];
+    if (!rateFrom || !rateTo) return amount; // fallback: no conversion
+    // Convert from 'from' to GBP, then GBP to 'to'
+    const amountInGbp = amount / rateFrom;
+    return amountInGbp * rateTo;
+  }
+
   // Auction Header (matches your screenshot)
   function AuctionHeader() {
     if (!auctionData) {
@@ -235,6 +255,37 @@ export default function SupplierAuctionLivePage() {
           </div>
         </div>
       );
+    }
+
+    const localCurrency = typeof window !== 'undefined'
+      ? localStorage.getItem(`auction_currency_${auctionData._id || auctionData.auctionId}`)
+      : null;
+
+    // Normalize currency codes
+    const auctionCurrency = auctionData.currency ? auctionData.currency.trim().toUpperCase() : '';
+    const userCurrency = localCurrency ? localCurrency.trim().toUpperCase() : '';
+
+    // Debug log for normalization and lookup
+    console.log(
+      'NORMALIZED:', { auctionCurrency, userCurrency },
+      'GBP Rate for auctionCurrency:', gbpRates[auctionCurrency],
+      'GBP Rate for userCurrency:', gbpRates[userCurrency]
+    );
+
+    // Reserve price conversion logic
+    let displayReservePrice: number | null = Number(auctionData.reservePrice);
+    let displayCurrency = userCurrency;
+    let conversionError = false;
+    if (
+      userCurrency &&
+      gbpRates[auctionCurrency] &&
+      gbpRates[userCurrency]
+    ) {
+      displayReservePrice = convertCurrency(Number(auctionData.reservePrice), auctionCurrency, userCurrency);
+    } else if (userCurrency && (!gbpRates[auctionCurrency] || !gbpRates[userCurrency])) {
+      conversionError = true;
+    } else {
+      displayCurrency = auctionCurrency;
     }
 
     const formatDate = (dateString: string) => {
@@ -253,16 +304,20 @@ export default function SupplierAuctionLivePage() {
                 {auctionData.auctionId}
             </span>
             <span className="mx-2 text-[#aaa]">|</span>
-            <a className="text-blue-600 underline cursor-pointer font-medium" href="#">View details</a>
+            {/* <a className="text-blue-600 underline cursor-pointer font-medium" href="#">View details</a> */}
           </div>
           <div className="flex items-center gap-12 mt-1 text-[13px]">
             <div>
               <div className="text-[#777] font-medium">Currency</div>
-              <div className="text-black font-medium">{auctionData.currency}</div>
+              <div className="text-black font-medium">{localCurrency}</div>
             </div>
             <div>
               <div className="text-[#777] font-medium">Reserve Price</div>
-              <div className="text-black font-medium">{auctionData.reservePrice}</div>
+              {conversionError ? (
+                <div className="text-black font-medium">Conversion for this value is not present for now</div>
+              ) : (
+                <div className="text-black font-medium">{displayReservePrice.toFixed(2)} {displayCurrency}</div>
+              )}
             </div>
             <div>
               <div className="text-[#777] font-medium">End Time</div>
@@ -412,6 +467,9 @@ export default function SupplierAuctionLivePage() {
 
   // Compute available lots (lots without an active bid by this supplier)
   const availableLots = auctionData?.lots?.filter(lot => !activeBids.some(bid => bid.lot === lot._id)) || [];
+  const localCurrency = typeof window !== 'undefined'
+    ? localStorage.getItem(`auction_currency_${auctionData?._id || auctionData?.auctionId}`)
+    : null;
 
   return (
     <SupplierLayout>
@@ -463,7 +521,7 @@ export default function SupplierAuctionLivePage() {
                       <td className={tdBase + ' ' + tdRank} style={{ color: idx === 0 ? '#2b9500' : '#e53935' }}>
                         #{idx + 1}
                       </td>
-                      <td className={tdBase + ' font-bold'}>${bid.amount}</td>
+                      <td className={tdBase + ' font-bold'}>{bid.amount} {localCurrency ? localCurrency.trim().toUpperCase() : ''}</td>
                       <td className={tdBase}>
                         {editBid === bid._id ? (
                           <div className="flex items-center gap-2">
@@ -475,6 +533,7 @@ export default function SupplierAuctionLivePage() {
                               min={0}
                               disabled={isSubmitting || isPaused}
                             />
+                            <span className="font-medium text-gray-700">{localCurrency ? localCurrency.trim().toUpperCase() : ''}</span>
                             <button
                               className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
                               title="Confirm"
@@ -493,7 +552,7 @@ export default function SupplierAuctionLivePage() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span>${bid.amount}</span>
+                            <span>{bid.amount} {localCurrency ? localCurrency.trim().toUpperCase() : ''}</span>
                             <button
                               className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-blue-50 border border-blue-500 text-blue-600 text-lg font-semibold transition hover:bg-blue-100"
                               title="Edit"
@@ -543,67 +602,70 @@ export default function SupplierAuctionLivePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {availableLots.map((realLot, idx: number) => (
-                      <React.Fragment key={idx}>
-                        <tr className="border-b border-[#f1f1f1] hover:bg-[#fafbfc] group transition">
-                          <td className={tdBase + ' font-semibold text-black'}>
-                            <button
-                              className="focus:outline-none"
-                              onClick={() => setExpandLot(expandLot === `${realLot.lotId}_${idx}` ? null : `${realLot.lotId}_${idx}`)}
-                            >
-                              {expandLot === `${realLot.lotId}_${idx}` ? '▾' : '▸'}
-                            </button>{' '}
-                            {realLot.lotId}
-                          </td>
-                          <td className={tdBase}>{realLot.name}</td>
-                          <td className={tdBase}>{realLot.volume || 'N/A'}</td>
-                          <td className={tdBase}>--</td>
-                          <td className={tdBase}>--</td>
-                          <td className={tdBase}>--</td>
-                          <td className={tdBase}>
-                            {placingBid === realLot._id ? (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
-                                  value={bidInput[realLot._id] || ''}
-                                  onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
-                                  min={0}
-                                  disabled={isSubmitting || isPaused}
-                                />
-                                <button
-                                  className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
-                                  title="Confirm"
-                                  disabled={isSubmitting || !bidInput[realLot._id] || isPaused}
-                                  onClick={() => handlePlaceBid(realLot)}
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
-                                  onClick={() => setPlacingBid(null)}
-                                  disabled={isSubmitting || isPaused}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ) : (
+                    {availableLots.map((realLot, idx: number) => {
+                      return (
+                        <React.Fragment key={idx}>
+                          <tr className="border-b border-[#f1f1f1] hover:bg-[#fafbfc] group transition">
+                            <td className={tdBase + ' font-semibold text-black'}>
                               <button
-                                className="text-blue-600 underline font-medium px-1 py-1"
-                                style={{ fontSize: 15, letterSpacing: '-0.5px' }}
-                                onClick={() => setPlacingBid(realLot._id)}
-                                disabled={isPaused}
+                                className="focus:outline-none"
+                                onClick={() => setExpandLot(expandLot === `${realLot.lotId}_${idx}` ? null : `${realLot.lotId}_${idx}`)}
                               >
-                                Place bid
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                        {expandLot === `${realLot.lotId}_${idx}` && (
-                          <ProductSpecsRow lot={realLot} />
-                        )}
-                      </React.Fragment>
-                    ))}
+                                {expandLot === `${realLot.lotId}_${idx}` ? '▾' : '▸'}
+                              </button>{' '}
+                              {realLot.lotId}
+                            </td>
+                            <td className={tdBase}>{realLot.name}</td>
+                            <td className={tdBase}>{realLot.volume || 'N/A'}</td>
+                            <td className={tdBase}>--</td>
+                            <td className={tdBase}>--</td>
+                            <td className={tdBase}>--</td>
+                            <td className={tdBase}>
+                              {placingBid === realLot._id ? (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    className="border rounded px-2 py-1 w-20 text-right text-black font-medium text-sm"
+                                    value={bidInput[realLot._id] || ''}
+                                    onChange={e => setBidInput(prev => ({ ...prev, [realLot._id]: e.target.value }))}
+                                    min={0}
+                                    disabled={isSubmitting || isPaused}
+                                  />
+                                  <span className="font-medium text-gray-700">{localCurrency}</span>
+                                  <button
+                                    className="flex items-center justify-center w-6 h-6 rounded-[4px] bg-green-50 border border-green-500 text-green-600 text-lg font-semibold transition hover:bg-green-100"
+                                    title="Confirm"
+                                    disabled={isSubmitting || !bidInput[realLot._id] || isPaused}
+                                    onClick={() => handlePlaceBid(realLot)}
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    className="ml-1 text-gray-400 hover:text-red-500 text-lg font-bold"
+                                    onClick={() => setPlacingBid(null)}
+                                    disabled={isSubmitting || isPaused}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className="text-blue-600 underline font-medium px-1 py-1"
+                                  style={{ fontSize: 15, letterSpacing: '-0.5px' }}
+                                  onClick={() => setPlacingBid(realLot._id)}
+                                  disabled={isPaused}
+                                >
+                                  Place bid
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                          {expandLot === `${realLot.lotId}_${idx}` && (
+                            <ProductSpecsRow lot={realLot} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               )
