@@ -326,6 +326,11 @@ function SupplierDashboardContent() {
                                 if (Array.isArray(data) && data.length === 0) {
                                   setCapacityModalOpen({ auctionId: auction.id, readOnly: false });
                                 } else {
+                                  // Extract currency from ranking API response and store in localStorage
+                                  const rankingCurrency = data[0]?.currency;
+                                  if (rankingCurrency) {
+                                    localStorage.setItem(`auction_currency_${auction.id}`, rankingCurrency);
+                                  }
                                   router.push(`/supplier/auction/${auction.id}/live`);
                                 }
                               } catch (err) {
