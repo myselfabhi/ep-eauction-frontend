@@ -311,10 +311,27 @@ function SupplierDashboardContent() {
                         {isLive ? (
                           <button
                             className="w-full py-3 rounded-[8px] text-white text-base font-semibold uppercase tracking-wide bg-[#D23636] hover:bg-[#b52d2d]"
-                            onClick={() => {
-                              if (!details) setCapacityModalOpen({ auctionId: auction.id, readOnly: false });
-                              else if (!details.confirmed) setConfirmationData({ auctionId: auction.id, capacities: details.capacities });
-                              else router.push(`/supplier/auction/${auction.id}/live`);
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('token');
+                                console.log('Using token:', token);
+                                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bid/ranking/${auction.id}`, {
+                                  headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                  },
+                                });
+                                const data = await res.json();
+                                console.log('Ranking API response for auction', auction.id, ':', data);
+                                if (Array.isArray(data) && data.length === 0) {
+                                  setCapacityModalOpen({ auctionId: auction.id, readOnly: false });
+                                } else {
+                                  router.push(`/supplier/auction/${auction.id}/live`);
+                                }
+                              } catch (err) {
+                                console.error('Failed to call ranking API:', err);
+                                setCapacityModalOpen({ auctionId: auction.id, readOnly: false }); // fallback: open modal on error
+                              }
                             }}
                           >
                             ENTER AUCTION
