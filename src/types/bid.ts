@@ -20,4 +20,5 @@ export interface Bid {
   score?: number;       // Added for ranking response
   product?: string;
   freight?: number;
+  rank?: number; // Added for ranking response
 }

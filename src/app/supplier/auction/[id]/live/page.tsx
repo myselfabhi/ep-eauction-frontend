@@ -484,7 +484,7 @@ export default function SupplierAuctionLivePage() {
                 </tr>
               </thead>
               <tbody>
-                {activeBids.map((bid, idx) => (
+                {activeBids.map((bid) => (
                   <React.Fragment key={bid._id}>
                     <tr className={`border-b border-[#f1f1f1] ${bid.status === 'Active' ? '' : 'bg-gray-100'}`}>
                       {(() => {
@@ -502,8 +502,8 @@ export default function SupplierAuctionLivePage() {
                           </>
                         );
                       })()}
-                      <td className={tdBase + ' ' + tdRank} style={{ color: idx === 0 ? '#2b9500' : '#e53935' }}>
-                        #{idx + 1}
+                      <td className={tdBase + ' ' + tdRank} style={{ color: bid.rank === 1 ? '#2b9500' : '#e53935' }}>
+                        {bid.rank ? `#${bid.rank}` : '--'}
                       </td>
                       <td className={tdBase + ' font-bold'}>{bid.amount} {localCurrency ? localCurrency.trim().toUpperCase() : ''}</td>
                       <td className={tdBase}>
@@ -603,7 +603,12 @@ export default function SupplierAuctionLivePage() {
                             <td className={tdBase}>{realLot.volume || 'N/A'}</td>
                             <td className={tdBase}>--</td>
                             <td className={tdBase}>--</td>
-                            <td className={tdBase}>--</td>
+                            <td className={tdBase}>
+                              {(() => {
+                                const bid = activeBids.find(b => b.lot === realLot._id);
+                                return bid && bid.rank ? `#${bid.rank}` : '--';
+                              })()}
+                            </td>
                             <td className={tdBase}>
                               {placingBid === realLot._id ? (
                                 <div className="flex items-center gap-2">
