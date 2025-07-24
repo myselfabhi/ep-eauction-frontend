@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SupplierLayout from '@/components/shared/SupplierLayout';
 import ConfirmBidModal from '@/components/ui/modal/ConfirmBidModal';
-import { auctionService } from '@/services';
 import { Auction } from '@/types/auction';
 import { bidService } from '@/services';
 import { Bid } from '@/types/bid';
@@ -80,6 +79,7 @@ export default function SupplierAuctionLivePage() {
   // Real auction data state
   const [auctionData, setAuctionData] = useState<Auction | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>('00 : 00 : 00');
+  const [timeOffset, setTimeOffset] = useState(0); // NEW: Offset between server and client time
   
   const [expandLot, setExpandLot] = useState<string | null>('LOT-CC-001_0');
   const [showLots, setShowLots] = useState(true);
@@ -131,54 +131,56 @@ export default function SupplierAuctionLivePage() {
   const [placingBid, setPlacingBid] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch auction data on component mount
+  // Fetch auction data and server time on mount
   useEffect(() => {
     const fetchAuctionData = async () => {
       try {
-        console.log('DEBUG: Fetching auction data for ID:', auctionId);
-        const response = await auctionService.getSingle(auctionId);
-        console.log('DEBUG: Live auction page - Auction data:', response);
-        console.log('DEBUG: Live auction page - Lots:', response.lots);
-        setAuctionData(response);
+        // Fetch auction data and get server time from response headers
+        const res = await fetch(`/api/auctions/${auctionId}`);
+        const data = await res.json();
+        setAuctionData(data);
+        // Get server time from Date header
+        const serverTimeString = res.headers.get('Date');
+        if (serverTimeString) {
+          const serverTime = new Date(serverTimeString).getTime();
+          const clientTime = Date.now();
+          setTimeOffset(serverTime - clientTime);
+        } else {
+          setTimeOffset(0); // fallback if header missing
+        }
       } catch (err) {
         console.error('DEBUG: Error fetching auction data:', err);
       }
     };
-
     if (auctionId) {
       fetchAuctionData();
     }
   }, [auctionId]);
 
-  // Live countdown timer for auction end
+  // Live countdown timer for auction end (using server time offset)
   useEffect(() => {
     if (!auctionData?.endTime) return;
-
     const updateCountdown = () => {
-      const now = new Date();
-      const end = new Date(auctionData.endTime);
-      const diff = end.getTime() - now.getTime();
-
+      const now = Date.now() + timeOffset; // Use offset
+      const end = new Date(auctionData.endTime).getTime();
+      const diff = end - now;
       if (diff <= 0) {
         setTimeLeft('00 : 00 : 00');
         return;
       }
-
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
       const seconds = Math.floor((diff / 1000) % 60);
-
       setTimeLeft(
         `${hours.toString().padStart(2, '0')} : ${minutes
           .toString()
           .padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`
       );
     };
-
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [auctionData?.endTime]);
+  }, [auctionData?.endTime, timeOffset]);
 
   // Socket: Listen for auction pause/resume
   useEffect(() => {
