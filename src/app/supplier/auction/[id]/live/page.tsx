@@ -8,6 +8,8 @@ import { Auction } from '@/types/auction';
 import { bidService } from '@/services';
 import { Bid } from '@/types/bid';
 import { getSocket, joinAuctionRoom, disconnectSocket } from '@/lib/socket';
+import ViewAuctionDetailsModal from '@/components/ui/modal/ViewAuctionDetailsModal';
+import type { ViewAuctionDetailsModalProps } from '@/components/ui/modal/ViewAuctionDetailsModal';
 
 // const initialActiveBids = [
 //   {
@@ -130,6 +132,31 @@ export default function SupplierAuctionLivePage() {
   const [bidInput, setBidInput] = useState<{ [lotId: string]: string }>({});
   const [placingBid, setPlacingBid] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
+  const [viewDetailsData, setViewDetailsData] = useState<ViewAuctionDetailsModalProps['auction'] | null>(null);
+
+  // Add a function to fetch auction details for the modal
+  const handleViewDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/${auctionId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        throw new Error('Auction not found');
+      }
+      const details = await res.json();
+      setViewDetailsData(details);
+      setViewDetailsOpen(true);
+    } catch (err) {
+      setViewDetailsData(null);
+      setViewDetailsOpen(true);
+      console.error('Failed to fetch auction details:', err);
+    }
+  };
 
   // Fetch auction data and server time on mount
   useEffect(() => {
@@ -298,7 +325,13 @@ export default function SupplierAuctionLivePage() {
                 {auctionData.auctionId}
             </span>
             <span className="mx-2 text-[#aaa]">|</span>
-            {/* <a className="text-blue-600 underline cursor-pointer font-medium" href="#">View details</a> */}
+            <button
+              className="text-blue-600 underline cursor-pointer font-medium"
+              onClick={handleViewDetails}
+              type="button"
+            >
+              View Details
+            </button>
           </div>
           <div className="flex items-center gap-12 mt-1 text-[13px]">
             <div>
@@ -686,6 +719,14 @@ export default function SupplierAuctionLivePage() {
           open={modalOpen}
           onCancel={handleCancel}
           onConfirm={handleConfirm}
+        />
+        <ViewAuctionDetailsModal
+          open={viewDetailsOpen}
+          onClose={() => {
+            setViewDetailsOpen(false);
+            setViewDetailsData(null);
+          }}
+          auction={viewDetailsData || {}}
         />
       </div>
     </SupplierLayout>
