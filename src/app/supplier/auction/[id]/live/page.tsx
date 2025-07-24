@@ -135,8 +135,16 @@ export default function SupplierAuctionLivePage() {
   useEffect(() => {
     const fetchAuctionData = async () => {
       try {
-        // Fetch auction data and get server time from response headers
-        const res = await fetch(`/api/auctions/${auctionId}`);
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auction/${auctionId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          throw new Error('Auction not found');
+        }
         const data = await res.json();
         setAuctionData(data);
         // Get server time from Date header
