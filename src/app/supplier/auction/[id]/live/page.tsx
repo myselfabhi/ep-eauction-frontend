@@ -10,6 +10,7 @@ import { Bid } from '@/types/bid';
 import { getSocket, joinAuctionRoom, disconnectSocket } from '@/lib/socket';
 import ViewAuctionDetailsModal from '@/components/ui/modal/ViewAuctionDetailsModal';
 import type { ViewAuctionDetailsModalProps } from '@/components/ui/modal/ViewAuctionDetailsModal';
+import ModalWrapper from '@/components/ui/modal/ModalWrapper';
 
 // const initialActiveBids = [
 //   {
@@ -134,6 +135,8 @@ export default function SupplierAuctionLivePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [viewDetailsData, setViewDetailsData] = useState<ViewAuctionDetailsModalProps['auction'] | null>(null);
+  const [showBidErrorModal, setShowBidErrorModal] = useState(false);
+  const [bidErrorMessage, setBidErrorMessage] = useState('');
 
   // Add a function to fetch auction details for the modal
   const handleViewDetails = async () => {
@@ -375,6 +378,15 @@ export default function SupplierAuctionLivePage() {
   // Place bid handler
   const handlePlaceBid = async (lot: Auction['lots'][0]) => {
     if (!auctionData || isPaused) return;
+    const bidValue = Number(bidInput[lot._id]);
+    if (
+      typeof auctionData.reservePrice === 'number' &&
+      bidValue > auctionData.reservePrice
+    ) {
+      setBidErrorMessage(`Your bid cannot exceed the reserve price of ${auctionData.reservePrice}.`);
+      setShowBidErrorModal(true);
+      return;
+    }
     setIsSubmitting(true);
     try {
       const modalValues = getModalValues();
@@ -415,6 +427,12 @@ export default function SupplierAuctionLivePage() {
   // Update bid handler
   const handleUpdateBid = async (bid: Bid) => {
     if (isPaused) return;
+    const newBidValue = Number(editBidValue);
+    if (typeof bid.amount === 'number' && newBidValue > bid.amount) {
+      setBidErrorMessage('You cannot update your bid to a value higher than your previous bid.');
+      setShowBidErrorModal(true);
+      return;
+    }
     setIsSubmitting(true);
     try {
       const modalValues = getModalValues();
@@ -728,6 +746,17 @@ export default function SupplierAuctionLivePage() {
           }}
           auction={viewDetailsData || {}}
         />
+        <ModalWrapper open={showBidErrorModal} onClose={() => setShowBidErrorModal(false)} title="Bid Error">
+          <div className="py-4 text-center">
+            <p>{bidErrorMessage}</p>
+            <button
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => setShowBidErrorModal(false)}
+            >
+              OK
+            </button>
+          </div>
+        </ModalWrapper>
       </div>
     </SupplierLayout>
   );

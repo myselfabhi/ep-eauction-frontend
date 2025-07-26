@@ -9,6 +9,7 @@ type ProductLotData = {
   volume?: string;
   prevCost?: string;
   dimensions?: { l?: string; w?: string; h?: string };
+  dimensionUnit?: string;
   lotCount?: number | string;
 };
 
@@ -181,28 +182,40 @@ export default function ProductLotStep({
         {/* Dimensions */}
         <div className="mt-4">
           <label className="block text-sm mb-1">Dimensions</label>
-          <div className="grid grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="L"
-              className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
-              value={data.dimensions?.l || ""}
-              onChange={(e) => handleDimensionChange("l", e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="W"
-              className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
-              value={data.dimensions?.w || ""}
-              onChange={(e) => handleDimensionChange("w", e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="H"
-              className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
-              value={data.dimensions?.h || ""}
-              onChange={(e) => handleDimensionChange("h", e.target.value)}
-            />
+          <div className="flex gap-4 items-center">
+            <div className="grid grid-cols-3 gap-4 flex-1">
+              <input
+                type="text"
+                placeholder="L"
+                className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
+                value={data.dimensions?.l || ""}
+                onChange={(e) => handleDimensionChange("l", e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="W"
+                className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
+                value={data.dimensions?.w || ""}
+                onChange={(e) => handleDimensionChange("w", e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="H"
+                className="w-full bg-white border border-[#DDE1EB] px-3 py-2 rounded text-sm"
+                value={data.dimensions?.h || ""}
+                onChange={(e) => handleDimensionChange("h", e.target.value)}
+              />
+            </div>
+            <select
+              className="border border-[#DDE1EB] px-2 py-2 rounded text-sm bg-white"
+              value={data.dimensionUnit || "cm"}
+              onChange={e => onChange({ dimensionUnit: e.target.value })}
+            >
+              <option value="cm">cm</option>
+              <option value="m">m</option>
+              <option value="in">in</option>
+              <option value="ft">ft</option>
+            </select>
           </div>
         </div>
 

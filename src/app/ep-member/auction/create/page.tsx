@@ -25,6 +25,7 @@ type LotData = {
   material?: string;
   volume?: string;
   dimensions?: { l?: string; w?: string; h?: string };
+  dimensionUnit?: string;
   prevCost?: string;
   lotCount?: number | string;
 };
@@ -186,9 +187,9 @@ export default function CreateAuctionPage() {
         material: lot.material || 'Material',
         volume: lot.volume || '0',
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
-        dimensions: lot.dimensions ?
-          `${lot.dimensions.l || ''}x${lot.dimensions.w || ''}x${lot.dimensions.h || ''}` :
-          undefined,
+        dimensions: lot.dimensions
+          ? `${lot.dimensions.l || ''}${lot.dimensionUnit || 'cm'}x${lot.dimensions.w || ''}${lot.dimensionUnit || 'cm'}x${lot.dimensions.h || ''}${lot.dimensionUnit || 'cm'}`
+          : undefined,
       })) || [],
       previewEmail: previewEmail || '',
       redirectUrl,

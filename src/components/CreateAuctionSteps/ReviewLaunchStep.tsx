@@ -15,6 +15,7 @@ type Lot = {
   };
   prevCost?: string;
   lotCount?: number | string;
+  dimensionUnit?: string;
 };
 
 type ReviewAuctionData = {
@@ -53,12 +54,13 @@ const Card = ({
   </section>
 );
 
-const formatDimensions = (dims?: { l?: string; w?: string; h?: string }) => {
+const formatDimensions = (dims?: { l?: string; w?: string; h?: string }, unit?: string) => {
   if (!dims) return "-";
   const { l, w, h } = dims;
   const parts = [l, w, h];
   if (parts.every((v) => !v)) return "-";
-  return `L${l || "-"} x W${w || "-"} x H${h || "-"}`;
+  const u = unit || "cm";
+  return `L${l || "-"}${u} x W${w || "-"}${u} x H${h || "-"}${u}`;
 };
 
 export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchStepProps) {
@@ -129,7 +131,7 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
                   <td className="px-4 py-2 border-b">
                     {lot.material || "-"}
                     {lot.material && lot.dimensions ? ", " : ""}
-                    {formatDimensions(lot.dimensions)}
+                    {formatDimensions(lot.dimensions, lot.dimensionUnit)}
                   </td>
                   <td className="px-4 py-2 border-b">{lot.volume || "-"}</td>
                   <td className="px-4 py-2 border-b">{lot.prevCost || "-"}</td>
