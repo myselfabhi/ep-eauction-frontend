@@ -39,6 +39,7 @@ type CostParams = {
 type AuctionData = {
   title?: string;
   description?: string;
+  sapCodes?: string[];
   category?: string;
   reservePrice?: number | string;
   currency?: string;
@@ -110,9 +111,9 @@ export default function CreateAuctionPage() {
   }, []);
 
   const requiredFieldsPerStep: Record<number, Array<keyof AuctionData>> = {
-    0: ['title', 'description', 'category', 'reservePrice', 'currency'],
+    0: ['title', 'description', 'category', 'reservePrice', 'currency', 'sapCodes'],
     2: ['startTime', 'endTime'],
-    3: ['invitedSuppliers'],
+    3: ['invitedSuppliers']
   };
 
   const isStepValid = () => {
@@ -151,13 +152,13 @@ export default function CreateAuctionPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const { title, description, category, reservePrice, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots, previewEmail } = auctionData;
+    const { title, description, category, reservePrice, sapCodes, currency, startTime, endTime, autoExtension, extensionMinutes, costParams, lots, previewEmail } = auctionData;
 
     // Prepare invitedSuppliers array with only emails (never ObjectIds)
     const invitedSuppliers = supplierObjects.map(s => s.email);
 
     // Validate required fields
-    if (!title || !description || !category || !currency || !startTime || !endTime) {
+    if (!title || !description || !category || !currency || !startTime || !endTime || !sapCodes) {
       alert('Please fill in all required fields.');
       setLoading(false);
       return;
@@ -171,6 +172,7 @@ export default function CreateAuctionPage() {
     const payload = {
       title: title.trim(),
       description: description.trim(),
+      sapCodes: sapCodes || [],
       category: category.trim(),
       reservePrice: Number(reservePrice),
       currency: currency.trim(),

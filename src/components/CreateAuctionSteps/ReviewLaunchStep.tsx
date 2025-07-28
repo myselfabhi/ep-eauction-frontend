@@ -21,6 +21,7 @@ type Lot = {
 type ReviewAuctionData = {
   title?: string;
   description?: string;
+  sapCodes?: string[];
   category?: string;
   reservePrice?: number | string;
   currency?: string;
@@ -103,6 +104,12 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
             <div className="text-xs mb-1 text-gray-500">Currency</div>
             <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
               {data.currency || "-"}
+            </div>
+          </div>
+             <div>
+            <div className="text-xs mb-1 text-gray-500">SAP Code(s)</div>
+            <div className="border border-[#E1E6F0] rounded px-2 py-2 bg-white text-[15px]">
+              {data.sapCodes || "-"}
             </div>
           </div>
         </div>
