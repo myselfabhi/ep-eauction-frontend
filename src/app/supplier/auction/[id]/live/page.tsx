@@ -379,11 +379,30 @@ export default function SupplierAuctionLivePage() {
   const handlePlaceBid = async (lot: Auction['lots'][0]) => {
     if (!auctionData || isPaused) return;
     const bidValue = Number(bidInput[lot._id]);
+    
+    // Get supplier's chosen currency
+    const modalValues = getModalValues();
+    const supplierCurrency = modalValues?.currency || auctionData.currency;
+    
+    // Convert reserve price to supplier's currency for validation
+    let convertedReservePrice = auctionData.reservePrice;
+    let reservePriceCurrency = auctionData.currency;
+    
     if (
       typeof auctionData.reservePrice === 'number' &&
-      bidValue > auctionData.reservePrice
+      supplierCurrency !== auctionData.currency &&
+      gbpRates[supplierCurrency] &&
+      gbpRates[auctionData.currency]
     ) {
-      setBidErrorMessage(`Your bid cannot exceed the reserve price of ${auctionData.reservePrice}.`);
+      convertedReservePrice = convertCurrency(auctionData.reservePrice, auctionData.currency, supplierCurrency);
+      reservePriceCurrency = supplierCurrency;
+    }
+    
+    if (
+      typeof convertedReservePrice === 'number' &&
+      bidValue > convertedReservePrice
+    ) {
+      setBidErrorMessage(`Your bid cannot exceed the reserve price of ${convertedReservePrice.toFixed(2)} ${reservePriceCurrency}.`);
       setShowBidErrorModal(true);
       return;
     }
@@ -428,6 +447,37 @@ export default function SupplierAuctionLivePage() {
   const handleUpdateBid = async (bid: Bid) => {
     if (isPaused) return;
     const newBidValue = Number(editBidValue);
+    
+    // Get supplier's chosen currency
+    const modalValues = getModalValues();
+    const supplierCurrency = modalValues?.currency || bid.currency;
+    
+    // Convert reserve price to supplier's currency for validation
+    let convertedReservePrice = auctionData?.reservePrice;
+    let reservePriceCurrency = auctionData?.currency;
+    
+    if (
+      auctionData &&
+      typeof auctionData.reservePrice === 'number' &&
+      supplierCurrency !== auctionData.currency &&
+      gbpRates[supplierCurrency] &&
+      gbpRates[auctionData.currency]
+    ) {
+      convertedReservePrice = convertCurrency(auctionData.reservePrice, auctionData.currency, supplierCurrency);
+      reservePriceCurrency = supplierCurrency;
+    }
+    
+    // Check if new bid exceeds reserve price
+    if (
+      typeof convertedReservePrice === 'number' &&
+      newBidValue > convertedReservePrice
+    ) {
+      setBidErrorMessage(`Your bid cannot exceed the reserve price of ${convertedReservePrice.toFixed(2)} ${reservePriceCurrency}.`);
+      setShowBidErrorModal(true);
+      return;
+    }
+    
+    // Check if new bid is higher than previous bid (reverse auction logic)
     if (typeof bid.amount === 'number' && newBidValue > bid.amount) {
       setBidErrorMessage('You cannot update your bid to a value higher than your previous bid.');
       setShowBidErrorModal(true);
