@@ -8,6 +8,7 @@ type Lot = {
   productName?: string;
   material?: string;
   volume?: string;
+  volumeUnit?: string;
   dimensions?: {
     l?: string;
     w?: string;
@@ -62,6 +63,11 @@ const formatDimensions = (dims?: { l?: string; w?: string; h?: string }, unit?: 
   if (parts.every((v) => !v)) return "-";
   const u = unit || "cm";
   return `L${l || "-"}${u} x W${w || "-"}${u} x H${h || "-"}${u}`;
+};
+
+const formatVolume = (volume?: string, unit?: string) => {
+  if (!volume) return "-";
+  return unit ? `${volume} ${unit}` : volume;
 };
 
 export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchStepProps) {
@@ -140,7 +146,7 @@ export default function ReviewLaunchStep({ data, suppliers = [] }: ReviewLaunchS
                     {lot.material && lot.dimensions ? ", " : ""}
                     {formatDimensions(lot.dimensions, lot.dimensionUnit)}
                   </td>
-                  <td className="px-4 py-2 border-b">{lot.volume || "-"}</td>
+                  <td className="px-4 py-2 border-b">{formatVolume(lot.volume, lot.volumeUnit)}</td>
                   <td className="px-4 py-2 border-b">{lot.prevCost || "-"}</td>
                   <td className="px-4 py-2 border-b">{lot.lotCount ?? "-"}</td>
                 </tr>

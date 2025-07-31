@@ -24,6 +24,7 @@ type LotData = {
   productName?: string;
   material?: string;
   volume?: string;
+  volumeUnit?: string;
   dimensions?: { l?: string; w?: string; h?: string };
   dimensionUnit?: string;
   prevCost?: string;
@@ -187,7 +188,7 @@ export default function CreateAuctionPage() {
         productName: lot.productName || 'Product',
         hsCode: lot.hsCode && lot.hsCode.trim() !== '' ? lot.hsCode : '123',
         material: lot.material || 'Material',
-        volume: lot.volume || '0',
+        volume: lot.volumeUnit ? `${lot.volume || '0'} ${lot.volumeUnit}` : (lot.volume || '0'),
         prevCost: lot.prevCost ? Number(lot.prevCost) : 0,
         dimensions: lot.dimensions
           ? `${lot.dimensions.l || ''}${lot.dimensionUnit || 'cm'}x${lot.dimensions.w || ''}${lot.dimensionUnit || 'cm'}x${lot.dimensions.h || ''}${lot.dimensionUnit || 'cm'}`

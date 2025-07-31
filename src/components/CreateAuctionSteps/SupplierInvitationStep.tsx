@@ -299,13 +299,17 @@ export default function SupplierInvitationStep({
             />
           ) : (
             <textarea
-              className={`w-full border ${editMode ? 'border-blue-300 bg-white' : 'border-none bg-transparent p-0'} rounded-lg px-3 py-2 text-[15px] leading-relaxed resize-y overflow-hidden focus:ring-2 focus:ring-blue-200 outline-none`}
+              className={`w-full border ${editMode ? 'border-blue-300 bg-white' : 'border-none bg-transparent p-0'} rounded-lg px-3 py-2 text-[15px] leading-relaxed resize-none overflow-hidden focus:ring-2 focus:ring-blue-200 outline-none`}
               value={previewValue}
               onChange={e => setPreviewValue(e.target.value)}
               readOnly={!editMode}
               tabIndex={editMode ? 0 : -1}
               rows={1}
               autoFocus={editMode}
+              style={{
+                minHeight: '1.5rem',
+                height: `${Math.max(1.5, (previewValue?.split('\n').length || 1) * 1.5)}rem`
+              }}
             />
           )}
           {showErrors && !previewValue && (
